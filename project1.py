@@ -22,7 +22,7 @@ def read_dict_file(filename):
                     key, value = line.strip().split(':', 1)
                     dict_data[key.strip()] = value.strip()
                 else:
-                    print(f"Nama panjang : {line.strip()}")
+                    print(f"Nama: {line.strip()}")
     except Exception as e:
         print(f"Terjadi kesalahan saat memproses file dictionary: {e}")
     return dict_data
