@@ -1,4 +1,0 @@
-1.kursi
-2.sofa
-3.meja
-4.lemari
