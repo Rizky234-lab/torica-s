@@ -1,4 +1,3 @@
-furniture.py
 from menuitem import MenuItem
 
 class furniture(MenuItem):
