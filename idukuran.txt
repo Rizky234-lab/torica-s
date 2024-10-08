@@ -1,3 +1,0 @@
-1.besar
-2.sedang
-3.kecil
