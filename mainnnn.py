@@ -41,9 +41,9 @@ def delete_furniture(index):
         print("Kode furniture tidak valid.")
 
 
-furniture1 = Furniture('kursi', 50, 2, 'Brown', 150000)
-furniture2 = Furniture('sofa', 200, 3, 'Red', 2000000)
-furniture3 = Furniture('meja', 150, 4, 'Black', 750000)
+furniture1 = Furniture('kursi', 50, 680, 'Brown', 150000)
+furniture2 = Furniture('sofa', 200, 390, 'Red', 2000000)
+furniture3 = Furniture('meja', 150, 400, 'Black', 750000)
 
 furnitures = [furniture1, furniture2, furniture3]
 
