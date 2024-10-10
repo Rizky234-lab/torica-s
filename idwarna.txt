@@ -1,0 +1,5 @@
+id:nama_warna
+1:putih 
+2:coklat
+3:hitam
+4:biru
