@@ -1,0 +1,4 @@
+id:nama_ukuran
+1:kecil
+2:medium
+3:besar
