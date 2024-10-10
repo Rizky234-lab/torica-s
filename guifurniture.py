@@ -116,3 +116,28 @@ def clear():
 app.geometry('750x600')
 app.configure(bg='darkblue')
 
+# Welcome label
+Label(app, text='SELAMAT DATANG SILAHKAN BERBELANJA DITOKO KAMI', bg='darkblue', fg='white', font='arial 18 bold').place(x=100, y=30)
+
+# Item selection listbox
+Label(app, text='Select an Item:', bg='darkblue', fg='white').place(x=100, y=100)
+item_listbox = Listbox(app, height=4, bg='white', fg='black')
+for item in items:
+    item_listbox.insert(END, f"{item['name']} - Color: {item['color']} - Size: {item['size']}")
+item_listbox.bind('<<ListboxSelect>>', select_item)
+item_listbox.place(x=200, y=100)
+
+# Selected item details labels
+Label(app, text='Selected Price (Rp):', bg='darkblue', fg='white').place(x=100, y=200)
+Label(app, textvariable=selected_price, bg='darkblue', fg='white').place(x=200, y=200)
+
+Label(app, text='Selected Color:', bg='darkblue', fg='white').place(x=100, y=230)
+Label(app, textvariable=selected_color, bg='darkblue', fg='white').place(x=200, y=230)
+
+Label(app, text='Selected Size:', bg='darkblue', fg='white').place(x=100, y=260)
+Label(app, textvariable=selected_size, bg='darkblue', fg='white').place(x=200, y=260)
+
+# Quantity input
+Label(app, text='Quantity:', bg='darkblue', fg='white').place(x=100, y=290)
+Entry(app, textvariable=quantity_var, width=5).place(x=200, y=290)
+
