@@ -141,3 +141,28 @@ Label(app, textvariable=selected_size, bg='darkblue', fg='white').place(x=200, y
 Label(app, text='Quantity:', bg='darkblue', fg='white').place(x=100, y=290)
 Entry(app, textvariable=quantity_var, width=5).place(x=200, y=290)
 
+# Add item button
+Button(app, text='Add Item', command=add_item).place(x=100, y=320)
+
+# Add to cart button
+Button(app, text='Add to Cart', command=add_to_cart).place(x=200, y=320)
+
+# Edit item button
+Button(app, text='Edit Quantity', command=edit_item).place(x=300, y=320)
+
+# Frame to display added items
+item_list_frame = Frame(app, bg='darkblue')
+item_list_frame.place(x=100, y=350)
+
+# Frame to display cart items
+cart_list_frame = Frame(app, bg='darkblue')
+cart_list_frame.place(x=400, y=100)
+
+# Total label
+Label(app, text='Total:', bg='darkblue', fg='white', font='arial 12 bold').place(x=100, y=550)
+Label(app, textvariable=tekstotal, bg='darkblue', fg='white', font='arial 12 bold').place(x=150, y=550)
+
+# Clear button
+Button(app, text='Clear', foreground='white', bg='#ff1e1e', command=clear).place(x=250, y=550)
+
+app.mainloop()
