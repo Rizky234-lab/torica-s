@@ -29,24 +29,24 @@ class Application(tk.Tk):
     def create_widgets(self):
         # Home frame widgets
         canvas = Canvas(self.home_frame, width=400, height=150, bg="#5960ff", highlightthickness=0)
-        canvas.create_text(200, 75, text="DATA FURNITURE", font=("Helvetica", 24, "bold"), fill="white")
+        canvas.create_text(200, 75, text="DATA FURNITURE", font=("Times  new roman", 24, "bold"), fill="white")
         canvas.pack()
 
         frame = tk.Frame(self.home_frame)
         frame.pack(pady=20)
 
-        button_furniture = tk.Button(frame, text="Furniture", font=("Helvetica", 12, "bold"), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('furniture'))
+        button_furniture = tk.Button(frame, text="Furniture", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('furniture'))
         button_furniture.grid(row=0, column=0, padx=20)
 
-        button_ukuran = tk.Button(frame, text="Ukuran", font=("Helvetica", 12, "bold"), compound=tk.TOP, bg="cyan", fg="white", padx=20, pady=10, command=lambda: self.show_data('ukuran'))
+        button_ukuran = tk.Button(frame, text="Ukuran", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="cyan", fg="white", padx=20, pady=10, command=lambda: self.show_data('ukuran'))
         button_ukuran.grid(row=0, column=1, padx=20)
 
-        button_warna = tk.Button(frame, text="Warna", font=("Helvetica", 12, "bold"), compound=tk.TOP, bg="green", fg="white", padx=20, pady=10, command=lambda: self.show_data('warna'))
+        button_warna = tk.Button(frame, text="Warna", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="green", fg="white", padx=20, pady=10, command=lambda: self.show_data('warna'))
         button_warna.grid(row=0, column=2, padx=20)
 
         # Data frames (furniture, warna, ukuran)
         for frame, title in [(self.furniture_frame, "List Furniture"), (self.warna_frame, "List Warna"), (self.ukuran_frame, "List Ukuran")]:
-            label = tk.Label(frame, text=title, font=("Helvetica", 16))
+            label = tk.Label(frame, text=title, font=("Times new roman", 16))
             label.pack(pady=10)
             
             listbox = tk.Listbox(frame, width=40, height=10)
@@ -84,7 +84,7 @@ class Application(tk.Tk):
                 delete_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
         # Warna tambah frame
-        label_tambah = tk.Label(self.warna_tambah_frame, text="Tambah Warna Baru", font=("Helvetica", 12))
+        label_tambah = tk.Label(self.warna_tambah_frame, text="Tambah Warna Baru", font=("Times new roman", 12))
         label_tambah.pack(pady=5)
         
         self.warna_entry = tk.Entry(self.warna_tambah_frame, width=30)
@@ -97,7 +97,7 @@ class Application(tk.Tk):
         back_button.pack(pady=10)
         
         # ukuran tambah frame
-        label_tambah = tk.Label(self.ukuran_tambah_frame, text="Tambah Ukuran Baru", font=("Helvetica", 12))
+        label_tambah = tk.Label(self.ukuran_tambah_frame, text="Tambah Ukuran Baru", font=("Times new roman", 12))
         label_tambah.pack(pady=5)
 
 
