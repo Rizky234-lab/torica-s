@@ -1,4 +1,4 @@
-from fungsi import furniture, Ukuran, Warna
+from fungsi import  Warna, Ukuran, furniture
 
 class DataManager:
     def __init__(self):
@@ -34,11 +34,18 @@ class DataManager:
         elif data_type == 'furniture':
             return data_object.hapus_furniture(item_id)
 
+
     def tambah_warna(self, warna_baru):
         return self.warna.tambah_warna(warna_baru)
-
+        
     def tambah_ukuran(self, ukuran_baru):
         return self.ukuran.tambah_ukuran(ukuran_baru)
-
-    def tambah_furniture(self, id_ukuran, id_warna):
-        return self.furniture.tambah_furniture(id_ukuran, id_warna)
+        
+    def tambah_furniturel(self, nama_furniture, id_ukuran, id_warna):
+        return self.furniture.tambah_furniture(nama_furniture, id_ukuran, id_warna)
+    
+    def tambah_transaksi(self, transaksi_data):
+        # transaksi_data should be in the format "id_furniture_banyak_barang_tanggal"
+        return self.transaksi.tambah_transaksi(transaksi_data)
+    
+    
