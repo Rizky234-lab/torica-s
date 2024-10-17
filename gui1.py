@@ -29,37 +29,37 @@ class Application(tk.Tk):
     def create_widgets(self):
         # Home frame widgets
         canvas = Canvas(self.home_frame, width=400, height=150, bg="blue", highlightthickness=0)
-        canvas.create_text(200, 75, text="DATA FURNITURE", font=("Times  new roman", 24, "bold"), fill="white")
+        canvas.create_text(200, 75, text="DATA FURNITURE", font=("Times new roman", 24, "bold"), fill="white")
         canvas.pack()
 
         frame = tk.Frame(self.home_frame)
         frame.pack(pady=20)
 
-        button_furniture = tk.Button(frame, text="Furniture", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('furniture'))
+        button_furniture = tk.Button(frame, text="Furniture", font=("Times new roman", 12), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('furniture'))
         button_furniture.grid(row=0, column=0, padx=20)
 
-        button_ukuran = tk.Button(frame, text="Ukuran", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('ukuran'))
+        button_ukuran = tk.Button(frame, text="Ukuran", font=("Times new roman", 12), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('ukuran'))
         button_ukuran.grid(row=0, column=1, padx=20)
 
-        button_warna = tk.Button(frame, text="Warna", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('warna'))
+        button_warna = tk.Button(frame, text="WARNA", font=("Times new roman", 12), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('warna'))
         button_warna.grid(row=0, column=2, padx=20)
 
         # Data frames (furniture, warna, ukuran)
         for frame, title in [(self.furniture_frame, "List Furniture"), (self.warna_frame, "List Warna"), (self.ukuran_frame, "List Ukuran")]:
-            label = tk.Label(frame, text=title, font=("Times new roman", 16))
+            label = tk.Label(frame, text=title, font=("Helvetica", 16))
             label.pack(pady=10)
             
             listbox = tk.Listbox(frame, width=40, height=10)
             listbox.pack(pady=10)
 
-            edit_button = tk.Button(frame, text="EDIT", command=lambda f=frame: self.show_edit_dialog(f))
+            edit_button = tk.Button(frame, text="Edit", command=lambda f=frame: self.show_edit_dialog(f))
             edit_button.pack(side=tk.LEFT, padx=5, pady=5)
 
             if frame == self.furniture_frame:
                 detail_button = tk.Button(frame, text="Tampilkan Detail", command=self.show_furniture_detail)
                 detail_button.pack(pady=5)
                 
-            back_button = tk.Button(frame, text="BACK", command=self.show_home)
+            back_button = tk.Button(frame, text="Kembali", command=self.show_home)
             back_button.pack(pady=10)
             
             if frame == self.warna_frame:
@@ -84,7 +84,7 @@ class Application(tk.Tk):
                 delete_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
         # Warna tambah frame
-        label_tambah = tk.Label(self.warna_tambah_frame, text="Tambah Warna Baru", font=("Times new roman", 12))
+        label_tambah = tk.Label(self.warna_tambah_frame, text="Tambah Warna Baru", font=("Helvetica", 12))
         label_tambah.pack(pady=5)
         
         self.warna_entry = tk.Entry(self.warna_tambah_frame, width=30)
@@ -93,21 +93,20 @@ class Application(tk.Tk):
         tambah_button = tk.Button(self.warna_tambah_frame, text="Tambah Warna", command=self.tambah_warna)
         tambah_button.pack(pady=10)
         
-        back_button = tk.Button(self.warna_tambah_frame, text="BACK", command=lambda: self.show_data('warna'))
+        back_button = tk.Button(self.warna_tambah_frame, text="Kembali", command=lambda: self.show_data('warna'))
         back_button.pack(pady=10)
         
         # ukuran tambah frame
-        label_tambah = tk.Label(self.ukuran_tambah_frame, text="Tambah Ukuran Baru", font=("Times new roman", 12))
+        label_tambah = tk.Label(self.ukuran_tambah_frame, text="Tambah Ukuran Baru", font=("Helvetica", 12))
         label_tambah.pack(pady=5)
-
-
+        
         self.ukuran_entry = tk.Entry(self.ukuran_tambah_frame, width=30)
         self.ukuran_entry.pack(pady=5)
         
         tambah_button = tk.Button(self.ukuran_tambah_frame, text="Tambah Ukuran", command=self.tambah_ukuran)
         tambah_button.pack(pady=10)
         
-        back_button = tk.Button(self.ukuran_tambah_frame, text="BACK", command=lambda: self.show_data('ukuran'))
+        back_button = tk.Button(self.ukuran_tambah_frame, text="Kembali", command=lambda: self.show_data('ukuran'))
         back_button.pack(pady=10)
         
         # furniture tambah frame
@@ -135,14 +134,14 @@ class Application(tk.Tk):
         tambah_button = tk.Button(self.furniture_tambah_frame, text="Tambah Furniture", command=self.tambah_furniture)
         tambah_button.pack(pady=10)
         
-        back_button = tk.Button(self.furniture_tambah_frame, text="BACK", command=lambda: self.show_data('furniture'))
+        back_button = tk.Button(self.furniture_tambah_frame, text="Kembali", command=lambda: self.show_data('furniture'))
         back_button.pack(pady=10)
 
         # Detail frame
         self.detail_label = tk.Label(self.detail_frame, text="", font=("Helvetica", 12))
         self.detail_label.pack(pady=10)
 
-        back_button = tk.Button(self.detail_frame, text="BACK", command=self.show_data)
+        back_button = tk.Button(self.detail_frame, text="Kembali", command=self.show_data)
         back_button.pack(pady=10)
 
         self.edit_frame = tk.Frame(self)
@@ -152,10 +151,10 @@ class Application(tk.Tk):
         self.edit_entry = tk.Entry(self.edit_frame, width=30)
         self.edit_entry.pack(pady=5)
         
-        save_button = tk.Button(self.edit_frame, text="SAVE", command=self.save_edit)
+        save_button = tk.Button(self.edit_frame, text="Simpan", command=self.save_edit)
         save_button.pack(pady=10)
         
-        back_button = tk.Button(self.edit_frame, text="BACK", command=self.show_data)
+        back_button = tk.Button(self.edit_frame, text="Kembali", command=self.show_data)
         back_button.pack(pady=10)
 
     def show_home(self):
@@ -199,7 +198,7 @@ class Application(tk.Tk):
         for item_id, item_name in items.items():
             listbox.insert(tk.END, f"{item_id}: {item_name}")
 
-def tambah_warna(self):
+    def tambah_warna(self):
         warna = self.warna_entry.get().strip()
         if warna:
             if self.data_manager.add_data('warna', warna):
@@ -209,7 +208,7 @@ def tambah_warna(self):
             else:
                 messagebox.showerror("Error", "Gagal menambahkan warna.")
         else:
-            messagebox.showwarning("WARNING", "Nama warna tidak boleh kosong.")
+            messagebox.showwarning("Peringatan", "Nama warna tidak boleh kosong.")
 
     def tambah_ukuran(self):
         ukuran = self.ukuran_entry.get().strip()
@@ -221,7 +220,7 @@ def tambah_warna(self):
             else:
                 messagebox.showerror("Error", "Gagal menambahkan ukuran.")
         else:
-            messagebox.showwarning("WARNING", "Nama ukuran tidak boleh kosong.")
+            messagebox.showwarning("Peringatan", "Nama ukuran tidak boleh kosong.")
 
     def tambah_furniture(self):
         nama = self.nama_furniture_entry.get().strip()
@@ -235,7 +234,7 @@ def tambah_warna(self):
             else:
                 messagebox.showerror("Error", "Gagal menambahkan furniture.")
         else:
-            messagebox.showwarning("WARNING", "Semua kolom harus diisi.")
+            messagebox.showwarning("Peringatan", "Semua kolom harus diisi.")
 
     def delete_action(self, data_type):
         selected_indices = self.get_selected_indices(data_type)
@@ -247,12 +246,12 @@ def tambah_warna(self):
             confirm = messagebox.askyesno("Konfirmasi", f"Apakah Anda yakin ingin menghapus item ini?\n{item_text}")
             if confirm:
                 if self.data_manager.delete_item(data_type, item_id):
-                    messagebox.showinfo("Berhasil", f"{data_type.capitalize()} dengan ID {item_id} berhasil dihapus.")
+                    messagebox.showinfo("Sukses", f"{data_type.capitalize()} dengan ID {item_id} berhasil dihapus.")
                     self.update_listbox(data_type)
                 else:
                     messagebox.showerror("Error", f"Gagal menghapus {data_type} dengan ID {item_id}.")
         else:
-            messagebox.showwarning("WARNING", "Silahkan pilih item yang ingin dihapus.")
+            messagebox.showwarning("Peringatan", "Silakan pilih item yang ingin dihapus.")
 
     def get_selected_indices(self, data_type):
         listbox = self.furniture_frame.winfo_children()[1] if data_type == 'furniture' else self.warna_frame.winfo_children()[1] if data_type == 'warna' else self.ukuran_frame.winfo_children()[1]
@@ -272,9 +271,9 @@ def tambah_warna(self):
                 self.edit_frame.pack()
                 self.current_edit_id = item_id  # Store the ID for saving later
             else:
-                messagebox.showwarning("WARNING", "Format data tidak sesuai.")
+                messagebox.showwarning("Peringatan", "Format data tidak sesuai.")
         else:
-            messagebox.showwarning("WARNING", "Silakan pilih item yang ingin diedit.")
+            messagebox.showwarning("Peringatan", "Silakan pilih item yang ingin diedit.")
 
     def save_edit(self):
         new_name = self.edit_entry.get().strip()
@@ -291,7 +290,7 @@ def tambah_warna(self):
             else:
                 messagebox.showerror("Error", "Gagal memperbarui data.")
         else:
-            messagebox.showwarning("WARNING", "Tidak ada item yang sedang diedit.")
+            messagebox.showwarning("Peringatan", "Tidak ada item yang sedang diedit.")
 
     def show_furniture_detail(self):
         selected_indices = self.get_selected_indices('furniture')
@@ -302,7 +301,7 @@ def tambah_warna(self):
             self.detail_label.config(text=f"Detail Furniture:\nID: {item_id}\nNama: {item_name}")
             self.detail_frame.pack()
         else:
-            messagebox.showwarning("WARNING", "Silakan pilih furniture untuk melihat detail.")
+            messagebox.showwarning("Peringatan", "Silakan pilih furniture untuk melihat detail.")
 
 # Pastikan untuk membuat instance dari Application dan menjalankan main loop
 if __name__ == "__main__":
