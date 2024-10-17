@@ -198,3 +198,113 @@ class Application(tk.Tk):
         items = self.data_manager.list_data(data_type)
         for item_id, item_name in items.items():
             listbox.insert(tk.END, f"{item_id}: {item_name}")
+
+def tambah_warna(self):
+        warna = self.warna_entry.get().strip()
+        if warna:
+            if self.data_manager.add_data('warna', warna):
+                messagebox.showinfo("Sukses", f"Warna '{warna}' berhasil ditambahkan.")
+                self.warna_entry.delete(0, tk.END)
+                self.show_data('warna')
+            else:
+                messagebox.showerror("Error", "Gagal menambahkan warna.")
+        else:
+            messagebox.showwarning("WARNING", "Nama warna tidak boleh kosong.")
+
+    def tambah_ukuran(self):
+        ukuran = self.ukuran_entry.get().strip()
+        if ukuran:
+            if self.data_manager.add_data('ukuran', ukuran):
+                messagebox.showinfo("Sukses", f"Ukuran '{ukuran}' berhasil ditambahkan.")
+                self.ukuran_entry.delete(0, tk.END)
+                self.show_data('ukuran')
+            else:
+                messagebox.showerror("Error", "Gagal menambahkan ukuran.")
+        else:
+            messagebox.showwarning("WARNING", "Nama ukuran tidak boleh kosong.")
+
+    def tambah_furniture(self):
+        nama = self.nama_furniture_entry.get().strip()
+        ukuran = self.ukuran_var.get()
+        warna = self.warna_var.get()
+        if nama and ukuran and warna:
+            if self.data_manager.add_furniture(nama, ukuran, warna):
+                messagebox.showinfo("Sukses", f"Furniture '{nama}' berhasil ditambahkan.")
+                self.nama_furniture_entry.delete(0, tk.END)
+                self.show_data('furniture')
+            else:
+                messagebox.showerror("Error", "Gagal menambahkan furniture.")
+        else:
+            messagebox.showwarning("WARNING", "Semua kolom harus diisi.")
+
+    def delete_action(self, data_type):
+        selected_indices = self.get_selected_indices(data_type)
+        if selected_indices:
+            selected_index = selected_indices[0]
+            listbox = self.furniture_frame.winfo_children()[1] if data_type == 'furniture' else self.warna_frame.winfo_children()[1] if data_type == 'warna' else self.ukuran_frame.winfo_children()[1]
+            item_text = listbox.get(selected_index)
+            item_id = item_text.split(":")[0].strip()
+            confirm = messagebox.askyesno("Konfirmasi", f"Apakah Anda yakin ingin menghapus item ini?\n{item_text}")
+            if confirm:
+                if self.data_manager.delete_item(data_type, item_id):
+                    messagebox.showinfo("Berhasil", f"{data_type.capitalize()} dengan ID {item_id} berhasil dihapus.")
+                    self.update_listbox(data_type)
+                else:
+                    messagebox.showerror("Error", f"Gagal menghapus {data_type} dengan ID {item_id}.")
+        else:
+            messagebox.showwarning("WARNING", "Silahkan pilih item yang ingin dihapus.")
+
+    def get_selected_indices(self, data_type):
+        listbox = self.furniture_frame.winfo_children()[1] if data_type == 'furniture' else self.warna_frame.winfo_children()[1] if data_type == 'warna' else self.ukuran_frame.winfo_children()[1]
+        return listbox.curselection()
+
+    def show_edit_dialog(self, frame):
+        selected_indices = self.get_selected_indices(self.current_data_type)
+        if selected_indices:
+            index = selected_indices[0]
+            selected_item = frame.winfo_children()[1].get(index)
+            parts = selected_item.split(":", 1)
+            if len(parts) == 2:
+                item_id = parts[0].strip()
+                item_name = parts[1].strip()
+                self.edit_entry.delete(0, tk.END)
+                self.edit_entry.insert(0, item_name)
+                self.edit_frame.pack()
+                self.current_edit_id = item_id  # Store the ID for saving later
+            else:
+                messagebox.showwarning("WARNING", "Format data tidak sesuai.")
+        else:
+            messagebox.showwarning("WARNING", "Silakan pilih item yang ingin diedit.")
+
+    def save_edit(self):
+        new_name = self.edit_entry.get().strip()
+        if new_name == "":
+            messagebox.showerror("Error", "Nama tidak boleh kosong!")
+            return
+        if hasattr(self, 'current_edit_id'):
+            success = self.data_manager.update_item(self.current_data_type, self.current_edit_id, new_name)
+            if success:
+                messagebox.showinfo("Sukses", "Data berhasil diperbarui!")
+                self.update_listbox(self.current_data_type)
+                self.edit_entry.delete(0, tk.END)
+                self.edit_frame.pack_forget()  # Hide edit frame after saving
+            else:
+                messagebox.showerror("Error", "Gagal memperbarui data.")
+        else:
+            messagebox.showwarning("WARNING", "Tidak ada item yang sedang diedit.")
+
+    def show_furniture_detail(self):
+        selected_indices = self.get_selected_indices('furniture')
+        if selected_indices:
+            index = selected_indices[0]
+            selected_item = self.furniture_frame.winfo_children()[1].get(index)
+            item_id, item_name = selected_item.split(": ")
+            self.detail_label.config(text=f"Detail Furniture:\nID: {item_id}\nNama: {item_name}")
+            self.detail_frame.pack()
+        else:
+            messagebox.showwarning("WARNING", "Silakan pilih furniture untuk melihat detail.")
+
+# Pastikan untuk membuat instance dari Application dan menjalankan main loop
+if __name__ == "__main__":
+    app = Application()
+    app.mainloop()
