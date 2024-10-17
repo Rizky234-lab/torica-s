@@ -1,148 +1,101 @@
-from datetime import datetime
+from fungsi import Warna, Ukuran, furniture
 
-class Furniture:
-    def __init__(self, name, size, quantity, color, price):
-        self.name = name
-        self.size = size  # in cm
-        self.quantity = quantity
-        self.color = color
-        self.price = price  # harga per item
+def main():
+    # Create instances of the classes
+    warna_handler = Warna()
+    ukuran_handler = Ukuran()
+    furniture_handler = furniture()
 
-    def info(self):
-        return f"{self.name} - Ukuran {self.size} cm - {self.quantity} pieces - {self.color} - Rp {self.price}"
+    # Main loop for the application
+    while True:
+        print("\n==== Menu Utama ====")
+        print("1. Lihat Data")
+        print("2. Tambah warna dan Ukuran")
+        print("3. Hapus Data")
+        print("4. Buat data furniture")
+        print("5. Keluar Aplikasi")
+        pilihan = input("Pilih opsi (1/2/3/4/5): ")
 
-    def get_total_price(self, count):
-        return self.price * count
+        if pilihan == '1':
+            print("\n1. Lihat Data Warna")
+            print("2. Lihat Data Ukuran")
+            print("3. Lihat Data Furniture")
+            pilihan_lihat = input("Pilihan: ")
+            if pilihan_lihat == '1':
+                data_dict = warna_handler.list_warna()
+                print("\nData Warna yang dibaca adalah Dictionary:")
+                print(data_dict)
+            elif pilihan_lihat == '2':
+                data_dict = ukuran_handler.list_ukuran()
+                print("\nData Ukuran yang dibaca adalah Dictionary:")
+                print(data_dict)
+            elif pilihan_lihat == '3':
+                data_dict = furniture_handler.list_furniture()
+                print("\nData Furniture yang dibaca adalah Dictionary:")
+                print(data_dict)
+            else:
+                print("Pilihan tidak valid.")
 
+        elif pilihan == '2':  # Add new data
+            print("\nPilih File yang ingin ditambah: ")
+            print("1. Data Warna")
+            print("2. Data Ukuran")
+            pilihan_tambah = input("Pilihan: ")
+            if pilihan_tambah == '1':
+                new_data = input("Masukkan warna baru: ")
+                warna_handler.tambah_warna(new_data)
+                print(f"Warna '{new_data}' berhasil ditambahkan.")
+            elif pilihan_tambah == '2':
+                new_data = input("Masukkan ukuran baru: ")
+                ukuran_handler.tambah_ukuran(new_data)
+                print(f"Ukuran '{new_data}' berhasil ditambahkan.")
+            else:
+                print("Pilihan tidak valid.")
 
-def add_furniture(name, size, quantity, color, price):
-    new_furniture = Furniture(name, size, quantity, color, price)
-    furnitures.append(new_furniture)
-    print(f"{name} berhasil ditambahkan!")
+        elif pilihan == '3':  # Delete data
+            print("\nPilih File yang ingin dihapus: ")
+            print("1. Data Warna")
+            print("2. Data Ukuran")
+            print("3. Data Furniture")
+            pilihan_hapus = input("Pilihan: ")
+            if pilihan_hapus == '1':
+                id_hapus = input("Masukkan ID warna yang akan dihapus: ")
+                if warna_handler.hapus_warna(id_hapus):
+                    print(f"Data warna dengan ID '{id_hapus}' berhasil dihapus.")
+                else:
+                    print(f"ID warna '{id_hapus}' tidak ditemukan.")
+            elif pilihan_hapus == '2':
+                id_hapus = input("Masukkan ID ukuran yang akan dihapus: ")
+                if ukuran_handler.hapus_ukuran(id_hapus):
+                    print(f"Data ukuran dengan ID '{id_hapus}' berhasil dihapus.")
+                else:
+                    print(f"ID ukuran '{id_hapus}' tidak ditemukan.")
+            elif pilihan_hapus == '3':
+                id_hapus = input("Masukkan ID furniture yang akan dihapus: ")
+                if furniture_handler.hapus_furniture(id_hapus):
+                    print(f"Data furniture dengan ID '{id_hapus}' berhasil dihapus.")
+                else:
+                    print(f"ID furniture '{id_hapus}' tidak ditemukan.")
+            else:
+                print("Pilihan tidak valid.")
 
-
-def edit_furniture(index, name, size, quantity, color, price):
-    if 0 <= index < len(furnitures):
-        furnitures[index].name = name
-        furnitures[index].size = size
-        furnitures[index].quantity = quantity
-        furnitures[index].color = color
-        furnitures[index].price = price
-        print(f"Furniture dengan kode {index} berhasil diubah!")
-    else:
-        print("Kode furniture tidak valid.")
-
-
-def delete_furniture(index):
-    if 0 <= index < len(furnitures):
-        deleted_item = furnitures.pop(index)
-        print(f"{deleted_item.name} berhasil dihapus!")
-    else:
-        print("Kode furniture tidak valid.")
-
-
-furniture1 = Furniture('kursi', 50, 680, 'Brown', 150000)
-furniture2 = Furniture('sofa', 200, 390, 'Red', 2000000)
-furniture3 = Furniture('meja', 150, 400, 'Black', 750000)
-
-furnitures = [furniture1, furniture2, furniture3]
-
-print("Selamat datang di Torica toko furniture terpercaya")
-
-while True:
-    print('List barang yang ada di toko kami:')
-    for index, furniture in enumerate(furnitures):
-        print(f"{index}. {furniture.info()}")
-
-    print('--------------------')
-    print('1. Tambah furniture')
-    print('2. Edit furniture')
-    print('3. Hapus furniture')
-    print('4. Order furniture')
-    print('5. Keluar')
-    choice = input("Masukkan pilihan (1-5): ")
-
-    if choice == '1':
-        # Tambah furniture
-        name = input("Masukkan nama furniture: ")
-        size = int(input("Masukkan ukuran furniture (cm): "))
-        quantity = int(input("Masukkan jumlah furniture: "))
-        color = input("Masukkan warna furniture: ")
-        price = int(input("Masukkan harga per item (Rp): "))
-        add_furniture(name, size, quantity, color, price)
-
-    elif choice == '2':
-        # Edit furniture
-        try:
-            edit_index = int(input("Masukkan kode furniture yang ingin diubah: "))
-            name = input("Masukkan nama baru furniture: ")
-            size = int(input("Masukkan ukuran baru furniture (cm): "))
-            quantity = int(input("Masukkan jumlah baru furniture: "))
-            color = input("Masukkan warna baru furniture: ")
-            price = int(input("Masukkan harga baru per item (Rp): "))
-            edit_furniture(edit_index, name, size, quantity, color, price)
-        except ValueError:
-            print("Input tidak valid.")
-
-    elif choice == '3':
-        # Hapus furniture
-        try:
-            delete_index = int(input("Masukkan kode furniture yang ingin dihapus: "))
-            delete_furniture(delete_index)
-        except ValueError:
-            print("Input tidak valid.")
-
-    elif choice == '4':
-        # Order furniture
-        while True:
+        elif pilihan == '4':  # Create furniture data
+            print("\nBuat Data Furniture: ")
+            id_ukuran = input("Masukkan ID ukuran: ")
+            id_warna = input("Masukkan ID warna: ")
             try:
-                furniture_order = int(input('Masukkan kode furniture yang anda inginkan: '))
-                if furniture_order < 0 or furniture_order >= len(furnitures):
-                    print("Kode furniture tidak ada. Mohon ulangi kembali.")
-                    continue
-                break
-            except ValueError:
-                print("Kode furniture tidak ada. Mohon ulangi kembali.")
+                result = furniture_handler.tambah_furniture(id_ukuran, id_warna)
+                print(f"Data furniture berhasil ditambahkan: {result}")
+            except ValueError as e:
+                print(e)
 
-        selected_furniture = furnitures[furniture_order]
+        elif pilihan == '5':  # Exit
+            print("Terima kasih telah menggunakan aplikasi!")
+            break
 
-        while True:
-            try:
-                count = int(input('Masukkan jumlah paket yang diinginkan: '))
-                if count < 1:
-                    print("Pemesanan minimal adalah 1 paket")
-                    continue
-                break
-            except ValueError:
-                print("Mohon hanya masukkan angka.")
+        else:
+            print("Pilihan tidak valid, silakan coba lagi.")
 
-        result = selected_furniture.get_total_price(count)
 
-        print('--------------------')
-
-        now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-        print(dt_string)
-
-        print(f'Total harga adalah Rp {result}')
-
-        print('''
-        Terima kasih sudah berbelanja.
-        Selamat datang kembali.
-        ''')
-
-        print('--------------------')
-
-        def writeHistory(date, total):
-            text = date + "\n" + "Total harga adalah Rp " + str(total) + "\n\n"
-            with open('history.txt', 'at') as file:
-                file.write(text)
-
-        writeHistory(dt_string, result)
-
-    elif choice == '5':
-        print("Terima kasih, sampai jumpa belanja lagi ya di toko kami!")
-        break
-
-    else:
-        print("Pilihan tidak valid. Mohon ulangi kembali.")
+if __name__ == "__main__":
+    main()
