@@ -41,7 +41,7 @@ class Application(tk.Tk):
         button_ukuran = tk.Button(frame, text="Ukuran", font=("Times new roman", 12), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('ukuran'))
         button_ukuran.grid(row=0, column=1, padx=20)
 
-        button_warna = tk.Button(frame, text="WARNA", font=("Times new roman", 12), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('warna'))
+        button_warna = tk.Button(frame, text="Warna", font=("Times new roman", 12), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('warna'))
         button_warna.grid(row=0, column=2, padx=20)
 
         # Data frames (furniture, warna, ukuran)
