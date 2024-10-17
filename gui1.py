@@ -28,7 +28,7 @@ class Application(tk.Tk):
 
     def create_widgets(self):
         # Home frame widgets
-        canvas = Canvas(self.home_frame, width=400, height=150, bg="#5960ff", highlightthickness=0)
+        canvas = Canvas(self.home_frame, width=400, height=150, bg="blue", highlightthickness=0)
         canvas.create_text(200, 75, text="DATA FURNITURE", font=("Times  new roman", 24, "bold"), fill="white")
         canvas.pack()
 
@@ -38,10 +38,10 @@ class Application(tk.Tk):
         button_furniture = tk.Button(frame, text="Furniture", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('furniture'))
         button_furniture.grid(row=0, column=0, padx=20)
 
-        button_ukuran = tk.Button(frame, text="Ukuran", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="cyan", fg="white", padx=20, pady=10, command=lambda: self.show_data('ukuran'))
+        button_ukuran = tk.Button(frame, text="Ukuran", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('ukuran'))
         button_ukuran.grid(row=0, column=1, padx=20)
 
-        button_warna = tk.Button(frame, text="Warna", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="green", fg="white", padx=20, pady=10, command=lambda: self.show_data('warna'))
+        button_warna = tk.Button(frame, text="Warna", font=("Times new roman", 12, "bold"), compound=tk.TOP, bg="blue", fg="white", padx=20, pady=10, command=lambda: self.show_data('warna'))
         button_warna.grid(row=0, column=2, padx=20)
 
         # Data frames (furniture, warna, ukuran)
