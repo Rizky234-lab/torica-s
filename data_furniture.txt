@@ -1,5 +1,6 @@
 id:nama_furniture
-1:lampu
-2:meja
-3:lemari
-4:kursi
+1:sofa
+2:lemari
+3:kursi
+4:meja
+5:lampu
