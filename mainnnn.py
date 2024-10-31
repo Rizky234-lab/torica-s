@@ -1,155 +1,121 @@
+from fungsi import Warna, Ukuran, Furniture, Transaksi
+
 def main():
-    while True:
-        print("\n=== Menu ===")
-        print("1. Manage Furniture")
-        print("2. Manage Warna")
-        print("3. Manage Ukuran")
-        print("4. Manage Transaksi")
-        print("5. Exit")
-        
-        choice = input("Choose an option (1-5): ")
-        
-        if choice == '1':
-            manage_furniture()
-        elif choice == '2':
-            manage_warna()
-        elif choice == '3':
-            manage_ukuran()
-        elif choice == '4':
-            transaksi()
-        elif choice == '5':
-            print("Exiting the program.")
-            break
-        else:
-            print("Invalid choice. Please try again.")
+    # Create instances of the classes
+    warna_handler = Warna()
+    ukuran_handler = Ukuran()
+    furniture_handler = Furniture()
+    transaksi_handler = Transaksi()
 
-def manage_furniture():
-    furniture_manager = id_furniture()
-    
+    # Main loop for the application
     while True:
-        print("\n=== Manage Furniture ===")
-        print("1. List Furniture")
-        print("2. Add Furniture")
-        print("3. Delete Furniture")
-        print("4. Back to Main Menu")
+        print("\n==== Menu Utama ====")
+        print("1. Lihat Data")
+        print("2. Tambah warna dan Ukuran")
+        print("3. Hapus Data")
+        print("4. Buat Data Furniture")
+        print("5. Tambah Transaksi")
+        print("6. Lihat Data Transaksi")
+        print("7. Keluar Aplikasi")
+        pilihan = input("Pilih opsi (1/2/3/4/5/6/7): ")
 
-        choice = input("Choose an option (1-4): ")
-        
-        if choice == '1':
-            furniture_list = furniture_manager.list_furniture()
-            furniture_manager.tampilkan_data(furniture_list)
-        elif choice == '2':
-            id_ukuran = input("Enter ukuran ID: ")
-            id_warna = input("Enter warna ID: ")
+        if pilihan == '1':
+            print("\n1. Lihat Data Warna")
+            print("2. Lihat Data Ukuran")
+            print("3. Lihat Data Furniture")
+            pilihan_lihat = input("Pilihan: ")
+            if pilihan_lihat == '1':
+                data_dict = warna_handler.list_warna()
+                print("\nData Warna yang dibaca adalah Dictionary:")
+                print(data_dict)
+            elif pilihan_lihat == '2':
+                data_dict = ukuran_handler.list_ukuran()
+                print("\nData Ukuran yang dibaca adalah Dictionary:")
+                print(data_dict)
+            elif pilihan_lihat == '3':
+                data_dict = furniture_handler.list_furniture()
+                print("\nData Furniture yang dibaca adalah Dictionary:")
+                print(data_dict)
+            else:
+                print("Pilihan tidak valid.")
+
+        elif pilihan == '2':  # Add new data
+            print("\nPilih File yang ingin ditambah: ")
+            print("1. Data Warna")
+            print("2. Data Ukuran")
+            pilihan_tambah = input("Pilihan: ")
+            if pilihan_tambah == '1':
+                new_data = input("Masukkan warna baru: ")
+                warna_handler.tambah_warna(new_data)
+                print(f"Warna '{new_data}' berhasil ditambahkan.")
+            elif pilihan_tambah == '2':
+                new_data = input("Masukkan ukuran baru: ")
+                ukuran_handler.tambah_ukuran(new_data)
+                print(f"Ukuran '{new_data}' berhasil ditambahkan.")
+            else:
+                print("Pilihan tidak valid.")
+
+        elif pilihan == '3':  # Delete data
+            print("\nPilih File yang ingin dihapus: ")
+            print("1. Data Warna")
+            print("2. Data Ukuran")
+            print("3. Data Furniture")
+            pilihan_hapus = input("Pilihan: ")
+            if pilihan_hapus == '1':
+                id_hapus = input("Masukkan ID warna yang akan dihapus: ")
+                if warna_handler.hapus_warna(id_hapus):
+                    print(f"Data warna dengan ID '{id_hapus}' berhasil dihapus.")
+                else:
+                    print(f"ID warna '{id_hapus}' tidak ditemukan.")
+            elif pilihan_hapus == '2':
+                id_hapus = input("Masukkan ID ukuran yang akan dihapus: ")
+                if ukuran_handler.hapus_ukuran(id_hapus):
+                    print(f"Data ukuran dengan ID '{id_hapus}' berhasil dihapus.")
+                else:
+                    print(f"ID ukuran '{id_hapus}' tidak ditemukan.")
+            elif pilihan_hapus == '3':
+                id_hapus = input("Masukkan ID furniture yang akan dihapus: ")
+                if furniture_handler.hapus_furniture(id_hapus):
+                    print(f"Data furniture dengan ID '{id_hapus}' berhasil dihapus.")
+                else:
+                    print(f"ID furniture '{id_hapus}' tidak ditemukan.")
+            else:
+                print("Pilihan tidak valid.")
+
+        elif pilihan == '4':  # Create furniture data
+            print("\nBuat Data Furniture: ")
+            id_ukuran = input("Masukkan ID ukuran: ")
+            id_warna = input("Masukkan ID warna: ")
             try:
-                result = furniture_manager.tambah_furniture(id_ukuran, id_warna)
-                print(f"Furniture added: {result}")
+                result = furniture_handler.tambah_furniture(id_ukuran, id_warna)
+                print(f"Data furniture berhasil ditambahkan: {result}")
             except ValueError as e:
                 print(e)
-        elif choice == '3':
-            id_furniture = input("Enter furniture ID to delete: ")
-            if furniture_manager.hapus_furniture(id_furniture):
-                print("Furniture deleted.")
-            else:
-                print("Furniture ID not found.")
-        elif choice == '4':
-            break
-        else:
-            print("Invalid choice. Please try again.")
 
-def manage_warna():
-    warna_manager = id_warna()
-
-    while True:
-        print("\n=== Manage Warna ===")
-        print("1. List Warna")
-        print("2. Add Warna")
-        print("3. Delete Warna")
-        print("4. Back to Main Menu")
-
-        choice = input("Choose an option (1-4): ")
-
-        if choice == '1':
-            warna_list = warna_manager.list_warna()
-            warna_manager.tampilkan_data(warna_list)
-        elif choice == '2':
-            warna = input("Enter warna: ")
-            new_id = warna_manager.tambah_warna(warna)
-            print(f"Warna added with ID: {new_id}")
-        elif choice == '3':
-            id_warna = input("Enter warna ID to delete: ")
-            if warna_manager.hapus_warna(id_warna):
-                print("Warna deleted.")
-            else:
-                print("Warna ID not found.")
-        elif choice == '4':
-            break
-        else:
-            print("Invalid choice. Please try again.")
-
-def manage_ukuran():
-    ukuran_manager = id_ukuran()
-
-    while True:
-        print("\n=== Manage Ukuran ===")
-        print("1. List Ukuran")
-        print("2. Add Ukuran")
-        print("3. Delete Ukuran")
-        print("4. Back to Main Menu")
-
-        choice = input("Choose an option (1-4): ")
-
-        if choice == '1':
-            ukuran_list = ukuran_manager.list_ukuran()
-            ukuran_manager.tampilkan_data(ukuran_list)
-        elif choice == '2':
-            ukuran = input("Enter ukuran: ")
-            new_id = ukuran_manager.tambah_ukuran(ukuran)
-            print(f"Ukuran added with ID: {new_id}")
-        elif choice == '3':
-            id_ukuran = input("Enter ukuran ID to delete: ")
-            if ukuran_manager.hapus_ukuran(id_ukuran):
-                print("Ukuran deleted.")
-            else:
-                print("Ukuran ID not found.")
-        elif choice == '4':
-            break
-        else:
-            print("Invalid choice. Please try again.")
-
-def transaksi():
-    transaksi = id_transaksi()
-
-    while True:
-        print("\n=== Manage Transaksi ===")
-        print("1. List Transaksi")
-        print("2. Add Transaksi")
-        print("3. Delete Transaksi")
-        print("4. Back to Main Menu")
-
-        choice = input("Choose an option (1-4): ")
-
-        if choice == '1':
-            transaksi_list = transaksi.list_transaksi()
-            transaksi.tampilkan_data(transaksi_list)
-        elif choice == '2':
-            id_furniture = input("Enter furniture ID: ")
-            jumlah = int(input("Enter quantity: "))
+        elif pilihan == '5':  # Add new transaction
+            print("\nTambah Data Transaksi: ")
+            id_furniture = input("Masukkan ID furniture: ")
+            jumlah = input("Masukkan jumlah: ")
+            harga = input("Masukkan harga: ")
             try:
-                result = transaksi_list(id_furniture, jumlah)
-                print(result)
+                transaksi_id = transaksi_handler.tambah_transaksi(id_furniture, jumlah, harga)
+                print(f"Transaksi baru berhasil ditambahkan dengan ID: {transaksi_id}")
             except ValueError as e:
                 print(e)
-        elif choice == '3':
-            id_transaksi = input("Enter transaction ID to delete: ")
-            if transaksi.hapus_transaksi(id_transaksi):
-                print("Transaction deleted.")
-            else:
-                print("Transaction ID not found.")
-        elif choice == '4':
+
+        elif pilihan == '6':  # View transactions
+            print("\nData Transaksi:")
+            data_dict = transaksi_handler.list_transaksi()
+            for id_transaksi, transaksi in data_dict.items():
+                print(f"{id_transaksi}: {transaksi}")
+
+        elif pilihan == '7':  # Exit
+            print("Terima kasih telah menggunakan aplikasi!")
             break
+
         else:
-            print("Invalid choice. Please try again.")
+            print("Pilihan tidak valid, silakan coba lagi.")
+
 
 if __name__ == "__main__":
     main()
