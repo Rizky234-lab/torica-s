@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox  # To show message boxes
+from datetime import datetime  # For transaction timestamps
 
 # Main application window
 root = Tk()
@@ -74,6 +75,15 @@ def showPersediaan(*args):
         statusmsg.set(f"Persediaan {name} ({code}) {stock}")
     sentmsg.set('')  # Clear sent message
 
+def calculate_price(furniture_code, size):
+    """Calculate the price of a furniture item based on its code and size."""
+    base_price = 1_100_000  # Base price for code '1' and small size
+    price_increase = int(furniture_code) * 100_000  # Increase price based on furniture code
+    size_increase = {"small": 0, "medium": 1_000_000, "big": 2_000_000}  # Size-based increase
+    
+    # Calculate final price
+    return base_price + price_increase + size_increase.get(size, 0)
+
 def sendtocart(*args):
     idxs = lbox.curselection()
     if len(idxs) == 1:
@@ -83,9 +93,18 @@ def sendtocart(*args):
         color = selected_color.get()
         size = selected_size.get()  # Get selected size
         if color and size:
-            transaction = f"{size.capitalize()} {color_dict[color]} {name}"
-            transactions.append(transaction)  # Save transaction
-            sentmsg.set(f"Transaksi anda: {transaction}")
+            price = calculate_price(furniturecodes, size)  # Calculate price based on furniture code and size
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            transaction = {
+                "timestamp": timestamp,
+                "furniture": name,
+                "color": color_dict[color],
+                "size": size.capitalize(),
+                "price": f"Rp. {price:,.0f}"
+            }
+            transactions.append(transaction)
+            sentmsg.set(f"Transaksi anda: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) seharga {transaction['price']}")
         else:
             sentmsg.set("Tolong pilih warna dan ukuran.")
 
@@ -97,15 +116,58 @@ def open_transactions():
 
     trans_window = Toplevel(root)
     trans_window.title("All Transactions")
-    trans_window.geometry("300x200")
+    trans_window.geometry("700x300")
 
-    # Listbox to show transactions
-    lb = Listbox(trans_window)
-    lb.pack(expand=True, fill=BOTH, padx=10, pady=10)
+    # Define Treeview columns
+    columns = ("timestamp", "furniture", "color", "size", "price")
 
-    # Insert all transactions into the Listbox
-    for t in transactions:
-        lb.insert(END, t)
+    # Create Treeview with columns for each transaction detail
+    tree = ttk.Treeview(trans_window, columns=columns, show="headings", height=10)
+    tree.pack(expand=True, fill=BOTH, padx=10, pady=10)
+
+    # Define headings for each column
+    tree.heading("timestamp", text="Timestamp")
+    tree.heading("furniture", text="Furniture")
+    tree.heading("color", text="Color")
+    tree.heading("size", text="Size")
+    tree.heading("price", text="Price")
+
+      # Insert all transactions into the Treeview
+    for trans in transactions:
+        tree.insert("", "end", values=(trans["timestamp"], trans["furniture"], trans["color"], trans["size"], trans["price"]))
+
+def add_furniture():
+    """Allow user to manually add a new furniture item."""
+    def save_furniture():
+        name = furniture_name_var.get()
+        code = str(len(furniturecodes) + 1)  # Generate new code
+        stock = stock_var.get()
+        
+        if name and stock.isdigit():
+            furniturenames.append(name)
+            furniturecodes.append(code)
+            persediaan[code] = int(stock)
+            cnames.set(furniturenames)  # Update listbox display
+            add_window.destroy()
+            messagebox.showinfo("Success", f"{name} has been added to the inventory!")
+        else:
+            messagebox.showerror("Error", "Please enter a valid name and stock quantity.")
+
+    add_window = Toplevel(root)
+    add_window.title("Add New Furniture")
+    add_window.geometry("300x200")
+
+    furniture_name_var = StringVar()
+    stock_var = StringVar()
+
+    Label(add_window, text="Furniture Name:").pack(pady=5)
+    Entry(add_window, textvariable=furniture_name_var).pack(pady=5)
+
+    Label(add_window, text="Stock Quantity:").pack(pady=5)
+    Entry(add_window, textvariable=stock_var).pack(pady=5)
+
+    Button(add_window, text="Add Furniture", command=save_furniture).pack(pady=10)
+
 
 # Placeholder functions for menu actions
 def open_main_menu():
@@ -115,49 +177,128 @@ def exit_app():
     root.quit()
 
 def add_transaction():
-    messagebox.showinfo("Add Transaction", "Add transaction placeholder.")
+    add_furniture()
 
 def edit_transaction():
-    """Edit a selected transaction with confirmation."""
     if not transactions:
         messagebox.showinfo("Edit Transaction", "No transactions to edit.")
         return
 
-    # Membuka jendela untuk memilih transaksi yang ingin diubah
-    idx_to_edit = len(transactions) - 1  # Contoh: Edit transaksi terakhir
-    selected_transaction = transactions[idx_to_edit]
+    # Create a new window to select and edit a transaction
+    edit_window = Toplevel(root)
+    edit_window.title("Edit Transaction")
+    edit_window.geometry("400x300")
 
-    # Menampilkan konfirmasi apakah ingin mengganti transaksi ini
-    confirm = messagebox.askyesno(
-        "Edit Transaction", 
-        f"Apakah kamu akan mengganti transaksi ini?\n{selected_transaction}"
-    )
+    # Dropdown to select transaction
+    selected_transaction_var = StringVar()
+    transaction_options = [f"{i+1}. {t['furniture']} - {t['size']} - {t['color']} - {t['price']}" for i, t in enumerate(transactions)]
+    selected_transaction_var.set(transaction_options[0])  # Default to the first transaction
 
-    if confirm:
-        # Melakukan edit (misal: ubah warna atau ukuran dari transaksi terakhir)
-        new_transaction = f"Medium Biru Sofa"  # Placeholder untuk transaksi baru
-        transactions[idx_to_edit] = new_transaction
-        messagebox.showinfo("Edit Successful", f"Transaksi berhasil diubah menjadi:\n{new_transaction}")
+    Label(edit_window, text="Select Transaction to Edit:").pack(pady=5)
+    transaction_menu = OptionMenu(edit_window, selected_transaction_var, *transaction_options)
+    transaction_menu.pack(pady=5)
+
+    # Editable fields for transaction details
+    Label(edit_window, text="Furniture Name:").pack(pady=5)
+    furniture_name_var = StringVar()
+    Entry(edit_window, textvariable=furniture_name_var).pack(pady=5)
+
+    Label(edit_window, text="Furniture Code:").pack(pady=5)
+    furniture_code_var = StringVar()
+    Entry(edit_window, textvariable=furniture_code_var).pack(pady=5)
+
+    Label(edit_window, text="Stock Quantity:").pack(pady=5)
+    stock_var = StringVar()
+    Entry(edit_window, textvariable=stock_var).pack(pady=5)
+
+    Label(edit_window, text="Price:").pack(pady=5)
+    price_var = StringVar()
+    Entry(edit_window, textvariable=price_var).pack(pady=5)
+
+    # Function to load selected transaction data
+    def load_selected_transaction():
+        index = int(selected_transaction_var.get().split(".")[0]) - 1
+        selected_transaction = transactions[index]
+
+        furniture_name_var.set(selected_transaction["furniture"])
+        furniture_code_var.set(furniturecodes[furniturenames.index(selected_transaction["furniture"])])
+        stock_var.set(persediaan[furniture_code_var.get()])
+        price_var.set(selected_transaction["price"])
+
+    # Button to load data of selected transaction
+    Button(edit_window, text="Load Data", command=load_selected_transaction).pack(pady=5)
+
+    # Save changes made to the transaction
+    def save_edited_transaction():
+        try:
+            index = int(selected_transaction_var.get().split(".")[0]) - 1
+            edited_furniture_name = furniture_name_var.get()
+            edited_code = furniture_code_var.get()
+            edited_stock = int(stock_var.get())  # Ensure stock is an integer
+            edited_price = price_var.get()
+
+            # Update the transaction data
+            transactions[index]["furniture"] = edited_furniture_name
+            transactions[index]["price"] = edited_price
+
+            # Update furniture database as well
+            if edited_code in furniturecodes:
+                furniturenames[furniturecodes.index(edited_code)] = edited_furniture_name
+                persediaan[edited_code] = edited_stock
+            else:
+                messagebox.showerror("Error", "Invalid furniture code.")
+
+            messagebox.showinfo("Edit Successful", "Transaction has been successfully updated.")
+            edit_window.destroy()  # Close the edit window after saving
+
+        except ValueError:
+            messagebox.showerror("Input Error", "Please enter valid data for all fields.")
+
+    Button(edit_window, text="Save Changes", command=save_edited_transaction).pack(pady=20)
+
+# Usage: Attach the new edit_transaction function to the help menu.
+    help_menu.add_command(label="Edit Transaction", command=edit_transaction)
+
 
 def delete_transaction():
-    """Delete the last transaction with confirmation."""
     if not transactions:
         messagebox.showinfo("Delete Transaction", "No transactions to delete.")
         return
 
-    # Transaksi terakhir
-    last_transaction = transactions[-1]
+    # Membuat list pilihan transaksi berdasarkan deskripsi (nama furniture dan rincian lain)
+    transaction_options = [f"{i+1}. {t['furniture']} - {t['size']} - {t['color']} - {t['price']}" for i, t in enumerate(transactions)]
+    
+    # Membuka jendela dialog untuk memilih transaksi yang ingin dihapus
+    delete_window = Toplevel(root)
+    delete_window.title("Delete Transaction")
+    delete_window.geometry("400x200")
 
-    # Konfirmasi penghapusan
-    confirm = messagebox.askyesno(
-        "Delete Transaction", 
-        f"Apakah kamu ingin menghapus transaksi ini?\n{last_transaction}"
-    )
+    Label(delete_window, text="Pilih transaksi yang ingin dihapus:").pack(pady=10)
+    
+    selected_transaction_var = StringVar()
+    selected_transaction_var.set(transaction_options[0])  # Default ke transaksi pertama
 
-    if confirm:
-        # Menghapus transaksi terakhir
-        transactions.pop()
-        messagebox.showinfo("Delete Successful", "Transaksi terakhir berhasil dihapus.")
+    # Dropdown menu untuk memilih transaksi
+    transaction_menu = OptionMenu(delete_window, selected_transaction_var, *transaction_options)
+    transaction_menu.pack(pady=10)
+
+    # Fungsi untuk menghapus transaksi yang dipilih
+    def confirm_delete():
+        selected_index = int(selected_transaction_var.get().split(".")[0]) - 1
+        selected_transaction = transactions[selected_index]
+
+        confirm = messagebox.askyesno(
+            "Delete Confirmation", 
+            f"Apakah Anda yakin ingin menghapus transaksi ini?\n{selected_transaction['furniture']} - {selected_transaction['size']} - {selected_transaction['color']} - {selected_transaction['price']}"
+        )
+
+        if confirm:
+            transactions.pop(selected_index)  # Hapus transaksi yang dipilih
+            messagebox.showinfo("Delete Successful", "Transaksi berhasil dihapus.")
+            delete_window.destroy()  # Tutup dialog setelah transaksi dihapus
+
+    Button(delete_window, text="Delete Transaction", command=confirm_delete).pack(pady=20)
+
 
 # Create and grid the outer content frame
 c = ttk.Frame(main_frame, padding=(5, 5, 12, 0))
