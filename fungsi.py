@@ -83,24 +83,24 @@ class Ukuran(DataItem):
 
 class Furniture(DataItem):
     def __init__(self):
-        super().__init__('idfurniture.txt', 'furniture')
+        super().__init__('data_furniture.txt', 'furniture')
         self.data_warna = Warna()
         self.data_ukuran = Ukuran()
 
     def list_furniture(self):
         return self.parse_dictionary(self.file_handler.bacafile(self.file_name) or "")
 
-    def tambah_furniture(self, id_ukuran, id_warna):
+    def tambah_furniture(self, data_ukuran, data_warna):
         warna_dict = self.data_warna.list_warna()
         ukuran_dict = self.data_ukuran.list_ukuran()
 
-        if id_ukuran not in ukuran_dict:
+        if data_ukuran not in ukuran_dict:
             raise ValueError("Nomor ukuran tidak valid.")
-        if id_warna not in warna_dict:
+        if data_warna not in warna_dict:
             raise ValueError("Nomor warna tidak valid.")
 
-        ukuran = ukuran_dict[id_ukuran]
-        warna = warna_dict[id_warna]
+        ukuran = ukuran_dict[data_ukuran]
+        warna = warna_dict[data_warna]
         furniture_data = self.list_furniture()
         new_id = str(max(map(int, furniture_data.keys() or [0])) + 1)
         furniture_data[new_id] = f"{ukuran} {warna}"
@@ -118,14 +118,14 @@ class Furniture(DataItem):
 
 class Transaksi(DataItem):
     def __init__(self):
-        super().__init__('idtransaksi.txt', 'transaksi')
+        super().__init__('data_transaksi.txt', 'transaksi')
 
     def list_transaksi(self):
         return self.parse_dictionary(self.file_handler.bacafile(self.file_name) or "")
 
-    def tambah_transaksi(self, id_furniture, jumlah, harga):
+    def tambah_transaksi(self, data_furniture, jumlah, harga):
         data_dict = self.list_transaksi()
         new_id = str(max(map(int, data_dict.keys() or [0])) + 1)
-        data_dict[new_id] = f"Furniture ID: {id_furniture}, Jumlah: {jumlah}, Harga: {harga}"
+        data_dict[new_id] = f"Furniture ID: {data_furniture}, Jumlah: {jumlah}, Harga: {harga}"
         self._tulis_kembali_data(data_dict)
         return new_id
