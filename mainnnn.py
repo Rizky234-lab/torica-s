@@ -43,6 +43,7 @@ def main():
             print("\nPilih File yang ingin ditambah: ")
             print("1. Data Warna")
             print("2. Data Ukuran")
+            print("3. Data Furniture")
             pilihan_tambah = input("Pilihan: ")
             if pilihan_tambah == '1':
                 new_data = input("Masukkan warna baru: ")
@@ -52,6 +53,10 @@ def main():
                 new_data = input("Masukkan ukuran baru: ")
                 ukuran_handler.tambah_ukuran(new_data)
                 print(f"Ukuran '{new_data}' berhasil ditambahkan.")
+            elif pilihan_tambah == '3':
+                new_data = input("Masukkan ukuran baru: ")
+                furniture_handler.tambah_furniture(new_data)
+                print(f"Furniture '{new_data}' berhasil ditambahkan.")
             else:
                 print("Pilihan tidak valid.")
 
@@ -84,21 +89,21 @@ def main():
 
         elif pilihan == '4':  # Create furniture data
             print("\nBuat Data Furniture: ")
-            id_ukuran = input("Masukkan ID ukuran: ")
-            id_warna = input("Masukkan ID warna: ")
+            data_ukuran = input("Masukkan ID ukuran: ")
+            data_warna = input("Masukkan ID warna: ")
             try:
-                result = furniture_handler.tambah_furniture(id_ukuran, id_warna)
+                result = furniture_handler.tambah_furniture(data_ukuran, data_warna)
                 print(f"Data furniture berhasil ditambahkan: {result}")
             except ValueError as e:
                 print(e)
 
         elif pilihan == '5':  # Add new transaction
             print("\nTambah Data Transaksi: ")
-            id_furniture = input("Masukkan ID furniture: ")
+            data_furniture = input("Masukkan ID furniture: ")
             jumlah = input("Masukkan jumlah: ")
             harga = input("Masukkan harga: ")
             try:
-                transaksi_id = transaksi_handler.tambah_transaksi(id_furniture, jumlah, harga)
+                transaksi_id = transaksi_handler.tambah_transaksi(data_furniture, jumlah, harga)
                 print(f"Transaksi baru berhasil ditambahkan dengan ID: {transaksi_id}")
             except ValueError as e:
                 print(e)
@@ -106,8 +111,8 @@ def main():
         elif pilihan == '6':  # View transactions
             print("\nData Transaksi:")
             data_dict = transaksi_handler.list_transaksi()
-            for id_transaksi, transaksi in data_dict.items():
-                print(f"{id_transaksi}: {transaksi}")
+            for data_transaksi, transaksi in data_dict.items():
+                print(f"{data_transaksi}: {transaksi}")
 
         elif pilihan == '7':  # Exit
             print("Terima kasih telah menggunakan aplikasi!")
