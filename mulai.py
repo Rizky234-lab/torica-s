@@ -69,7 +69,7 @@ def showPersediaan(*args):
     idxs = lbox.curselection()
     if len(idxs) == 1:
         idx = int(idxs[0])
-        code = furniturecodes[idx]
+        code = code[idx]
         name = furniturenames[idx]
         stock = persediaan[code]
         statusmsg.set(f"Persediaan {name} ({code}) {stock}")
