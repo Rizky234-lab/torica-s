@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import ttk
-from tkinter import messagebox  # To show message boxes
+from tkinter import messagebox
 from datetime import datetime  # For transaction timestamps
 
 # Main application window
@@ -9,12 +9,12 @@ root.geometry("400x300")
 root.title("Torica Furniture Store")
 
 # Initialize furniture "databases"
-furniturecodes = ('1', '2', '3', '4', '5')
-furniturenames = ('Sofa', 'Lemari', 'Kursi', 'Meja', 'Lampu')
+furniturecodes = ['1', '2', '3', '4', '5']
+furniturenames = ['Sofa', 'Lemari', 'Kursi', 'Meja', 'Lampu']
 cnames = StringVar(value=furniturenames)
 persediaan = {'1': 280, '2': 110, '3': 450, '4': 350, '5': 560}
 
-# Color dictionary for furniture leaders
+# Color dictionary for furniture colors
 color_dict = {'merah': 'Merah', 'biru': 'Biru', 'kuning': 'Kuning', 'hijau': 'Hijau'}
 
 # State variables
@@ -23,7 +23,7 @@ selected_size = StringVar()
 sentmsg = StringVar()
 statusmsg = StringVar()
 
-# List to store all transactions
+# List to store all transactions, including timestamp and other details
 transactions = []
 
 # Create container for multiple screens (Frames)
@@ -69,7 +69,7 @@ def showPersediaan(*args):
     idxs = lbox.curselection()
     if len(idxs) == 1:
         idx = int(idxs[0])
-        code = code[idx]
+        code = furniturecodes[idx]
         name = furniturenames[idx]
         stock = persediaan[code]
         statusmsg.set(f"Persediaan {name} ({code}) {stock}")
@@ -90,10 +90,11 @@ def sendtocart(*args):
         idx = int(idxs[0])
         lbox.see(idx)
         name = furniturenames[idx]
+        code = furniturecodes[idx]
         color = selected_color.get()
         size = selected_size.get()  # Get selected size
         if color and size:
-            price = calculate_price(furniturecodes, size)  # Calculate price based on furniture code and size
+            price = calculate_price(code, size)  # Calculate price based on furniture code and size
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
             transaction = {
@@ -107,6 +108,7 @@ def sendtocart(*args):
             sentmsg.set(f"Transaksi anda: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) seharga {transaction['price']}")
         else:
             sentmsg.set("Tolong pilih warna dan ukuran.")
+
 
 def open_transactions():
     """Open a new window to display all transactions."""
@@ -167,7 +169,6 @@ def add_furniture():
     Entry(add_window, textvariable=stock_var).pack(pady=5)
 
     Button(add_window, text="Add Furniture", command=save_furniture).pack(pady=10)
-
 
 # Placeholder functions for menu actions
 def open_main_menu():
@@ -365,7 +366,7 @@ menubar = Menu(root)
 # File Menu
 file_menu = Menu(menubar, tearoff=0)
 file_menu.add_command(label="Main Menu", command=open_main_menu)
-file_menu.add_command(label="Open Transaction", command=open_transactions)  # New option
+file_menu.add_command(label="Open Transaction", command=open_transactions)
 file_menu.add_separator()
 file_menu.add_command(label="Exit", command=exit_app)
 menubar.add_cascade(label="File", menu=file_menu)
