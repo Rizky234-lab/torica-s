@@ -5,7 +5,7 @@ from datetime import datetime  # For transaction timestamps
 
 # Main application window
 root = Tk()
-root.geometry("400x300")
+root.geometry("800x600")
 root.title("Torica Furniture Store")
 
 # Initialize furniture "databases"
@@ -169,6 +169,108 @@ def add_furniture():
     Entry(add_window, textvariable=stock_var).pack(pady=5)
 
     Button(add_window, text="Add Furniture", command=save_furniture).pack(pady=10)
+
+# Modify the color dictionary to be more extensible
+color_dict = {'merah': 'Merah', 'biru': 'Biru', 'kuning': 'Kuning', 'hijau': 'Hijau'}
+
+def add_color():
+    """Allow user to add new color options for furniture."""
+    add_color_window = Toplevel(root)
+    add_color_window.title("Add New Color")
+    add_color_window.geometry("300x200")
+
+    # Variables for new color
+    color_code_var = StringVar()
+    color_name_var = StringVar()  # This will store the display name
+
+    # Create and layout widgets
+    Label(add_color_window, text="Color Code:").pack(pady=5)
+    Entry(add_color_window, textvariable=color_code_var).pack(pady=5)
+
+    Label(add_color_window, text="Display Name:").pack(pady=5)
+    Entry(add_color_window, textvariable=color_name_var).pack(pady=5)  # Now using color_name_var
+
+    def save_color():
+        code = color_code_var.get().strip().lower()
+        name = color_name_var.get().strip()
+
+        if code and name:
+            if code in color_dict:
+                messagebox.showerror("Error", "This color code already exists!")
+                return
+            
+            # Add new color to dictionary
+            color_dict[code] = name
+
+            # Create new radio button for the color
+            new_radio = ttk.Radiobutton(c, text=name, variable=selected_color, value=code)
+            
+            # Find the row after the last color radio button
+            last_row = 0
+            for widget in c.grid_slaves():
+                if isinstance(widget, ttk.Radiobutton) and widget.grid_info()['column'] == 1:
+                    last_row = max(last_row, widget.grid_info()['row'])
+            
+            # Place the new radio button
+            new_radio.grid(column=1, row=last_row + 1, sticky=W, padx=20)
+
+            messagebox.showinfo("Success", f"New color '{name}' has been added!")
+            add_color_window.destroy()
+        else:
+            messagebox.showerror("Error", "Please enter both color code and display name!")
+
+    Button(add_color_window, text="Add Color", command=save_color).pack(pady=20)
+
+# Add this near the top of your code with other dictionaries and variables
+size_dict = {'small': 'Small', 'medium': 'Medium', 'big': 'Big'}  # Initial sizes
+
+def add_size():
+    """Allow user to add new size options for furniture."""
+    add_size_window = Toplevel(root)
+    add_size_window.title("Add New Size")
+    add_size_window.geometry("300x200")
+
+    # Variables for new size
+    size_code_var = StringVar()
+    size_name_var = StringVar()  # This will store the display name
+
+    # Create and layout widgets
+    Label(add_size_window, text="Size Code:").pack(pady=5)
+    Entry(add_size_window, textvariable=size_code_var).pack(pady=5)
+
+    Label(add_size_window, text="Display Name:").pack(pady=5)
+    Entry(add_size_window, textvariable=size_name_var).pack(pady=5)  # Now using size_name_var
+
+    def save_size():
+        code = size_code_var.get().strip().lower()
+        name = size_name_var.get().strip()
+
+        if code and name:
+            if code in size_dict:
+                messagebox.showerror("Error", "This size code already exists!")
+                return
+            
+            # Add new size to dictionary
+            size_dict[code] = name
+
+            # Create new radio button for the size
+            new_radio = ttk.Radiobutton(c, text=name, variable=selected_size, value=code)
+            
+            # Find the row after the last size radio button
+            last_row = 0
+            for widget in c.grid_slaves():
+                if isinstance(widget, ttk.Radiobutton) and widget.grid_info()['column'] == 2:
+                    last_row = max(last_row, widget.grid_info()['row'])
+            
+            # Place the new radio button
+            new_radio.grid(column=2, row=last_row + 1, sticky=W, padx=20)
+
+            messagebox.showinfo("Success", f"New size '{name}' has been added!")
+            add_size_window.destroy()
+        else:
+            messagebox.showerror("Error", "Please enter both size code and display name!")
+
+    Button(add_size_window, text="Add Size", command=save_size).pack(pady=20)
 
 # Placeholder functions for menu actions
 def open_main_menu():
@@ -372,10 +474,12 @@ file_menu.add_command(label="Exit", command=exit_app)
 menubar.add_cascade(label="File", menu=file_menu)
 
 # Help Menu
+# Help Menu
 help_menu = Menu(menubar, tearoff=0)
 help_menu.add_command(label="Add Transaction", command=add_transaction)
+help_menu.add_command(label="Add Color", command=add_color)
+help_menu.add_command(label="Add Size", command=add_size)  # Added this line
 help_menu.add_command(label="Clear Transaction", command=delete_transaction)
-help_menu.add_command(label="Edit Transaction", command=edit_transaction)
 menubar.add_cascade(label="Help", menu=help_menu)
 
 # Attach the menu bar to the root window
