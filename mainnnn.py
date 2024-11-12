@@ -10,14 +10,14 @@ def main():
     # Main loop for the application
     while True:
         print("\n==== Menu Utama ====")
-        print("1. Lihat Data")
-        print("2. Tambah warna dan Ukuran")
-        print("3. Hapus Data")
-        print("4. Buat Data Furniture")
-        print("5. Tambah Transaksi")
-        print("6. Lihat Data Transaksi")
-        print("7. Keluar Aplikasi")
-        pilihan = input("Pilih opsi (1/2/3/4/5/6/7): ")
+        print("1. View Data")
+        print("2. Add New Data")
+        print("3. Delete Data")
+        print("4. Add New Transaction")
+        print("5. Delete Transaction")
+        print("6. View Transaction")
+        print("7. Exit")
+        pilihan = input("Pilih opsi (1/2/3/4/5/6): ")
 
         if pilihan == '1':
             print("\n1. Lihat Data Warna")
@@ -54,7 +54,7 @@ def main():
                 ukuran_handler.tambah_ukuran(new_data)
                 print(f"Ukuran '{new_data}' berhasil ditambahkan.")
             elif pilihan_tambah == '3':
-                new_data = input("Masukkan ukuran baru: ")
+                new_data = input("Masukkan furniture baru: ")
                 furniture_handler.tambah_furniture(new_data)
                 print(f"Furniture '{new_data}' berhasil ditambahkan.")
             else:
@@ -87,17 +87,7 @@ def main():
             else:
                 print("Pilihan tidak valid.")
 
-        elif pilihan == '4':  # Create furniture data
-            print("\nBuat Data Furniture: ")
-            data_ukuran = input("Masukkan ID ukuran: ")
-            data_warna = input("Masukkan ID warna: ")
-            try:
-                result = furniture_handler.tambah_furniture(data_ukuran, data_warna)
-                print(f"Data furniture berhasil ditambahkan: {result}")
-            except ValueError as e:
-                print(e)
-
-        elif pilihan == '5':  # Add new transaction
+        elif pilihan == '4':  # Add new transaction
             print("\nTambah Data Transaksi: ")
             data_furniture = input("Masukkan ID furniture: ")
             jumlah = input("Masukkan jumlah: ")
@@ -107,6 +97,20 @@ def main():
                 print(f"Transaksi baru berhasil ditambahkan dengan ID: {transaksi_id}")
             except ValueError as e:
                 print(e)
+
+
+        elif pilihan == '5':  # Delete transaction
+            print("\nPilih File yang ingin dihapus: ")
+            print("1. ID Transaksi")
+            pilihan_hapus = input("Pilihan: ")
+            if pilihan_hapus == '1':
+                id_hapus = input("Masukkan ID yang akan dihapus: ")
+                if furniture_handler.hapus_furniture(id_hapus):
+                    print(f"Data transaksi dengan ID '{id_hapus}' berhasil dihapus.")
+                else:
+                    print(f"ID transaksi '{id_hapus}' tidak ditemukan.")
+            else:
+                print("Pilihan tidak valid.")
 
         elif pilihan == '6':  # View transactions
             print("\nData Transaksi:")
