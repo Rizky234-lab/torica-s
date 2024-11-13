@@ -5,7 +5,7 @@ from datetime import datetime  # For transaction timestamps
 
 # Main application window
 root = Tk()
-root.geometry("800x600")
+root.geometry("700x400")
 root.title("Torica Furniture Store")
 
 # Initialize furniture "databases"
@@ -16,6 +16,7 @@ persediaan = {'1': 280, '2': 110, '3': 450, '4': 350, '5': 560}
 
 # Color dictionary for furniture colors
 color_dict = {'merah': 'Merah', 'biru': 'Biru', 'kuning': 'Kuning', 'hijau': 'Hijau'}
+size_dict = {'small': 'Small', 'medium': 'Medium', 'big': 'Big'}
 
 # State variables
 selected_color = StringVar()
@@ -77,9 +78,9 @@ def showPersediaan(*args):
 
 def calculate_price(furniture_code, size):
     """Calculate the price of a furniture item based on its code and size."""
-    base_price = 1_100_000  # Base price for code '1' and small size
+    base_price = 500_000  # Base price for code '1' and small size
     price_increase = int(furniture_code) * 100_000  # Increase price based on furniture code
-    size_increase = {"small": 0, "medium": 1_000_000, "big": 2_000_000}  # Size-based increase
+    size_increase = {"small": 0, "medium": 500_000, "big": 1_000_000}  # Size-based increase
     
     # Calculate final price
     return base_price + price_increase + size_increase.get(size, 0)
@@ -134,9 +135,27 @@ def open_transactions():
     tree.heading("size", text="Size")
     tree.heading("price", text="Price")
 
-      # Insert all transactions into the Treeview
+     # Insert all transactions into the Treeview
     for trans in transactions:
         tree.insert("", "end", values=(trans["timestamp"], trans["furniture"], trans["color"], trans["size"], trans["price"]))
+
+def save_transactions_to_file():
+    """Save all transactions to a text file."""
+    if not transactions:
+        messagebox.showinfo("Save Transactions", "No transactions to save.")
+        return
+
+    file_name = "data_transaksi.txt"  
+
+    try:
+        with open(file_name, 'w') as file:
+            for trans in transactions:
+                line = f"{trans['timestamp']}, {trans['furniture']}, {trans['color']}, {trans['size']}, {trans['price']}\n"
+                file.write(line)
+
+        messagebox.showinfo("Save Successful", f"Transactions have been saved to {file_name}")
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not save transactions: {str(e)}")
 
 def add_furniture():
     """Allow user to manually add a new furniture item."""
@@ -150,6 +169,11 @@ def add_furniture():
             furniturecodes.append(code)
             persediaan[code] = int(stock)
             cnames.set(furniturenames)  # Update listbox display
+            
+            # Save the new furniture to a text file
+            with open("data_furniture.txt", "a") as file:
+                file.write(f"{code}:{name}\n")
+
             add_window.destroy()
             messagebox.showinfo("Success", f"{name} has been added to the inventory!")
         else:
@@ -169,9 +193,6 @@ def add_furniture():
     Entry(add_window, textvariable=stock_var).pack(pady=5)
 
     Button(add_window, text="Add Furniture", command=save_furniture).pack(pady=10)
-
-# Modify the color dictionary to be more extensible
-color_dict = {'merah': 'Merah', 'biru': 'Biru', 'kuning': 'Kuning', 'hijau': 'Hijau'}
 
 def add_color():
     """Allow user to add new color options for furniture."""
@@ -202,6 +223,10 @@ def add_color():
             # Add new color to dictionary
             color_dict[code] = name
 
+            # Save the new color to a text file
+            with open("data_warna.txt", "a") as file:
+                file.write(f"{code}:{name}\n")
+
             # Create new radio button for the color
             new_radio = ttk.Radiobutton(c, text=name, variable=selected_color, value=code)
             
@@ -220,9 +245,6 @@ def add_color():
             messagebox.showerror("Error", "Please enter both color code and display name!")
 
     Button(add_color_window, text="Add Color", command=save_color).pack(pady=20)
-
-# Add this near the top of your code with other dictionaries and variables
-size_dict = {'small': 'Small', 'medium': 'Medium', 'big': 'Big'}  # Initial sizes
 
 def add_size():
     """Allow user to add new size options for furniture."""
@@ -252,6 +274,10 @@ def add_size():
             
             # Add new size to dictionary
             size_dict[code] = name
+
+            # Save the new size to a text file
+            with open("data_ukuran.txt", "a") as file:
+                file.write(f"{code}:{name}\n")
 
             # Create new radio button for the size
             new_radio = ttk.Radiobutton(c, text=name, variable=selected_size, value=code)
@@ -469,6 +495,7 @@ menubar = Menu(root)
 file_menu = Menu(menubar, tearoff=0)
 file_menu.add_command(label="Main Menu", command=open_main_menu)
 file_menu.add_command(label="Open Transaction", command=open_transactions)
+file_menu.add_command(label="Save Transactions", command=save_transactions_to_file)  # Added this line
 file_menu.add_separator()
 file_menu.add_command(label="Exit", command=exit_app)
 menubar.add_cascade(label="File", menu=file_menu)
@@ -476,7 +503,7 @@ menubar.add_cascade(label="File", menu=file_menu)
 # Help Menu
 # Help Menu
 help_menu = Menu(menubar, tearoff=0)
-help_menu.add_command(label="Add Transaction", command=add_transaction)
+help_menu.add_command(label="Add Furniture", command=add_furniture)
 help_menu.add_command(label="Add Color", command=add_color)
 help_menu.add_command(label="Add Size", command=add_size)  # Added this line
 help_menu.add_command(label="Clear Transaction", command=delete_transaction)
