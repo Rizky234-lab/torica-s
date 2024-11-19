@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+from datetime import datetime
+
 
 class FileHandler:
     def __init__(self, directory=None):
@@ -9,7 +11,7 @@ class FileHandler:
         """Membaca file dan mengembalikan isinya sebagai string. Jika file tidak ditemukan, mengembalikan None."""
         file_path = Path(self.current_directory) / nama_file
         try:
-            with open(file_path, 'r') as file:
+            with open(str(file_path), 'r') as file:
                 return file.read()
         except FileNotFoundError:
             return None
@@ -17,7 +19,7 @@ class FileHandler:
     def editfile(self, nama_file, data, mode='w'):
         """Menulis data ke file dengan mode tertentu (default: 'w')."""
         file_path = Path(self.current_directory) / nama_file
-        with open(file_path, mode) as file:
+        with open(str(file_path), mode) as file:
             file.write(data)
 
 
@@ -49,12 +51,10 @@ class Warna(DataItem):
         super().__init__('data_warna.txt', 'warna', file_handler)
 
     def list_warna(self):
-        """Mengembalikan dictionary daftar warna dari file."""
         data = self.file_handler.bacafile(self.file_name) or ""
         return self.parse_dictionary(data)
 
     def tambah_warna(self, warna):
-        """Menambahkan warna baru ke file dan mengembalikan kunci (key)-nya."""
         data_dict = self.list_warna()
         new_key = str(max(map(int, data_dict.keys()), default=0) + 1)
         data_dict[new_key] = warna
@@ -62,7 +62,6 @@ class Warna(DataItem):
         return new_key
 
     def hapus_warna(self, data_key):
-        """Menghapus warna berdasarkan kunci (key) dan mengembalikan True jika berhasil."""
         data_dict = self.list_warna()
         if data_key in data_dict:
             del data_dict[data_key]
@@ -70,53 +69,51 @@ class Warna(DataItem):
             return True
         return False
 
-
 class Ukuran(DataItem):
     def __init__(self, file_handler=None):
         super().__init__('data_ukuran.txt', 'ukuran', file_handler)
-
+    
     def list_ukuran(self):
-        """Mengembalikan dictionary daftar ukuran dari file."""
+        """Return all size data from file"""
         data = self.file_handler.bacafile(self.file_name) or ""
         return self.parse_dictionary(data)
-
+    
     def tambah_ukuran(self, ukuran):
-        """Menambahkan ukuran baru ke file dan mengembalikan kunci (key)-nya."""
+        """Add new size"""
         data_dict = self.list_ukuran()
         new_key = str(max(map(int, data_dict.keys()), default=0) + 1)
         data_dict[new_key] = ukuran
         self._tulis_kembali_data(data_dict)
         return new_key
-
+    
     def hapus_ukuran(self, data_key):
-        """Menghapus ukuran berdasarkan kunci (key) dan mengembalikan True jika berhasil."""
+        """Delete size by ID"""
         data_dict = self.list_ukuran()
         if data_key in data_dict:
             del data_dict[data_key]
             self._tulis_kembali_data(data_dict)
             return True
-        return False
-
+        return False 
 
 class Furniture(DataItem):
     def __init__(self, file_handler=None):
         super().__init__('data_furniture.txt', 'furniture', file_handler)
-
+    
     def list_furniture(self):
-        """Mengembalikan dictionary daftar furniture dari file."""
+        """Return all furniture data from file"""
         data = self.file_handler.bacafile(self.file_name) or ""
         return self.parse_dictionary(data)
-
-    def tambah_furniture(self, furniture): 
-        """Menambahkan furniture baru ke file dan mengembalikan kunci (key)-nya."""
+    
+    def tambah_furniture(self, furniture):
+        """Add new furniture item"""
         data_dict = self.list_furniture()
         new_key = str(max(map(int, data_dict.keys()), default=0) + 1)
         data_dict[new_key] = furniture
         self._tulis_kembali_data(data_dict)
         return new_key
-
-    def hapus_furniture(self, data_key): 
-        """Menghapus furniture berdasarkan kunci (key) dan mengembalikan True jika berhasil.""" 
+    
+    def hapus_furniture(self, data_key):
+        """Delete furniture by ID"""
         data_dict = self.list_furniture()
         if data_key in data_dict:
             del data_dict[data_key]
@@ -124,21 +121,28 @@ class Furniture(DataItem):
             return True
         return False
 
-
-
-class Transaksi(DataItem):
+class Transaction(DataItem):
     def __init__(self, file_handler=None):
         super().__init__('data_transaksi.txt', 'transaksi', file_handler)
 
     def list_transaksi(self):
-        """Mengembalikan dictionary daftar transaksi dari file."""
         data = self.file_handler.bacafile(self.file_name) or ""
         return self.parse_dictionary(data)
 
     def tambah_transaksi(self, furniture_key, jumlah, harga):
-        """Menambahkan transaksi baru dan mengembalikan kunci (key)-nya."""
         data_dict = self.list_transaksi()
-        new_key = str(max(map(int, data_dict.keys()), default=0) + 1)
+        new_key = str(max((int(k) for k in data_dict.keys() if k.isdigit()), default=0) + 1)
         data_dict[new_key] = f"Furniture Key: {furniture_key}, Jumlah: {jumlah}, Harga: {harga}"
         self._tulis_kembali_data(data_dict)
         return new_key
+
+
+class DateTimeHandler:
+    @staticmethod
+    def get_current_timestamp():
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    @staticmethod
+    def format_date(date_str, current_format="%Y-%m-%d", desired_format="%d-%m-%Y"):
+        date_obj = datetime.strptime(date_str, current_format)
+        return date_obj.strftime(desired_format)
