@@ -12,15 +12,17 @@ def main():
 
     # Main loop for the application
     while True:
-        print("\n===== Furniture Store Management System =====")
+        print("\n (∩˃o˂∩)★")
+        print(" Torica Furniture Store .•*¨*•.¸¸♪=")
         print("1. View Data")
         print("2. Add New Data")
         print("3. Delete Data")
-        print("4. Add New Transaction")
-        print("5. Delete Transaction")
-        print("6. View Transaction")
-        print("7. Exit")
-        pilihan = input("Enter your choice (1-7): ")
+        print("4. Edit Data")
+        print("5. Add New Transaction")
+        print("6. Delete Transaction")
+        print("7. View Transaction")
+        print("8. Exit")
+        pilihan = input("Enter your choice (1-8): ")
 
         if pilihan == '1':  # View data
             print("\n=== View Data ===")
@@ -70,7 +72,7 @@ def main():
                     print("Invalid choice.")
 
         elif pilihan == '3':  # Delete data
-            print("\n=== Delete Data ===")
+            print("\n Delete Data -ˋˏ✄┈┈┈┈")
             print("1. Delete Color")
             print("2. Delete Size")
             print("3. Delete Furniture")
@@ -99,13 +101,44 @@ def main():
                 
             else:
                     print("Invalid choice.")
+        
+        elif pilihan == '4':  # Edit Data
+            print("\n=== Edit Data ===")
+            print("1. Edit Color")
+            print("2. Edit Size")
+            print("3. Edit Furniture")
+            pilihan_edit = input("Enter your choice (1-3): ")
+
+            if pilihan_edit == '1':
+                    id_edit = input("Enter Color ID to edit: ")
+                    if warna_handler.edit_warna(id_edit):
+                        print(f"Color with ID '{id_edit}' has been successfully edited.")
+                    else:
+                        print(f"Color ID '{id_edit}' not found.")
+                
+            elif pilihan_edit == '2':
+                    id_edit = input("Enter Size ID to edit: ")
+                    if ukuran_handler.edit_ukuran(id_edit):
+                        print(f"Size with ID '{id_edit}' has been successfully edited.")
+                    else:
+                        print(f"Size ID '{id_edit}' not found.")
+                
+            elif pilihan_edit == '3':
+                    id_edit = input("Enter Furniture ID to edit: ")
+                    if furniture_handler. edit_furniture(id_edit):
+                        print(f"Furniture with ID '{id_edit}' has been successfully edited.")
+                    else:
+                        print(f"Furniture ID '{id_edit}' not found.")
+                
+            else:
+                    print("Invalid choice.")
            
-        elif pilihan == '4':  # Add new transaction
+        elif pilihan == '5':  # Add new transaction
             print("\n=== Add New Transaction ===")
-            furniture_name = input("Masukkan nama furniture: ")
-            furniture_code = input("Masukkan kode furniture: ")
-            selected_color = input("Masukkan warna: ")
-            selected_size = input("Masukkan ukuran: ")
+            furniture_name = input("Add the furniture: ")
+            furniture_code = input("Add the code furniture: ")
+            selected_color = input("Add the color: ")
+            selected_size = input("Add the size: ")
 
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
  
@@ -123,7 +156,7 @@ def main():
             print(f"Transaction successfully added: {new_transaction}")
             
         
-        elif pilihan == '5':  # Delete transaction
+        elif pilihan == '6':  # Delete transaction
             print("\n=== Delete Transaction ===")
             if transactions:
                 print("Available Transactions:")
@@ -142,7 +175,7 @@ def main():
             else:
                 print("No transactions available.")
 
-        elif pilihan == '6':  # View transactions
+        elif pilihan == '7':  # View transactions
             print("\n=== Transaction History ===")
             if transactions:
                 for idx, transaction in enumerate(transactions):
@@ -155,8 +188,8 @@ def main():
             else:
                 print("No transactions available.")
 
-        elif pilihan == '7':  # Exit
-            print("\nThank you for using the Furniture Store Management System!")
+        elif pilihan == '8':  # Exit
+            print("\nThank you for visiting our store ♪¸¸.•*¨*•.!")
             break
 
         else:
