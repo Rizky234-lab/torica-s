@@ -68,6 +68,15 @@ class Warna(DataItem):
             self._tulis_kembali_data(data_dict)
             return True
         return False
+    
+    def edit_warna(self, data_key):
+        data_dict = self.list_warna()
+        if data_key in data_dict:
+            new_warna = input(f"Enter new color for ID {data_key} (current: {data_dict[data_key]}): ")
+            data_dict[data_key] = new_warna
+            self._tulis_kembali_data(data_dict)
+            return True
+        return False
 
 class Ukuran(DataItem):
     def __init__(self, file_handler=None):
@@ -94,6 +103,15 @@ class Ukuran(DataItem):
             self._tulis_kembali_data(data_dict)
             return True
         return False 
+    
+    def edit_ukuran(self, data_key):
+        data_dict = self.list_ukuran()
+        if data_key in data_dict:
+            new_ukuran = input(f"Enter new size for ID {data_key} (current: {data_dict[data_key]}): ")
+            data_dict[data_key] = new_ukuran
+            self._tulis_kembali_data(data_dict)
+            return True
+        return False
 
 class Furniture(DataItem):
     def __init__(self, file_handler=None):
@@ -117,6 +135,15 @@ class Furniture(DataItem):
         data_dict = self.list_furniture()
         if data_key in data_dict:
             del data_dict[data_key]
+            self._tulis_kembali_data(data_dict)
+            return True
+        return False
+    
+    def edit_furniture(self, data_key):
+        data_dict = self.list_furniture()
+        if data_key in data_dict:
+            new_furniture = input(f"Enter new furniture for ID {data_key} (current: {data_dict[data_key]}): ")
+            data_dict[data_key] = new_furniture
             self._tulis_kembali_data(data_dict)
             return True
         return False
