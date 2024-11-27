@@ -18,6 +18,8 @@ persediaan = {'1': 280, '2': 110, '3': 450, '4': 350, '5': 560}
 color_dict = {'merah': 'Merah', 'biru': 'Biru', 'kuning': 'Kuning', 'hijau': 'Hijau'}
 size_dict = {'small': 'Small', 'medium': 'Medium', 'big': 'Big'}
 
+
+
 # State variables
 selected_color = StringVar()
 selected_size = StringVar()
@@ -79,7 +81,7 @@ def showPersediaan(*args):
 def calculate_price(furniture_code, size):
     """Calculate the price of a furniture item based on its code and size."""
     base_price = 500_000  # Base price for code '1' and small size
-    price_increase = int(furniture_code) * 100_000  # Increase price based on furniture code
+    price_increase = int(furniture_code) * 500  # Increase price based on furniture code
     size_increase = {"small": 0, "medium": 500_000, "big": 1_000_000}  # Size-based increase
     
     # Calculate final price
@@ -94,9 +96,12 @@ def sendtocart(*args):
         code = furniturecodes[idx]
         color = selected_color.get()
         size = selected_size.get()  # Get selected size
-        if color and size:
+
+        if persediaan[code] > 0 and color and size:
             price = calculate_price(code, size)  # Calculate price based on furniture code and size
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            persediaan[code] -= 1
             
             transaction = {
                 "timestamp": timestamp,
@@ -106,9 +111,13 @@ def sendtocart(*args):
                 "price": f"Rp. {price:,.0f}"
             }
             transactions.append(transaction)
-            sentmsg.set(f"Transaksi anda: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) seharga {transaction['price']}")
+            sentmsg.set(f"Transaksi anda: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) seharga {transaction['price']} | Stok tersisa: {persediaan[code]}")
+            statusmsg.set(f"Persediaan {name} ({code}) {persediaan[code]}")
         else:
-            sentmsg.set("Tolong pilih warna dan ukuran.")
+            if persediaan[code] <= 0:
+                sentmsg.set(f"Maaf, stok {name} sudah habis!")
+            else:
+                sentmsg.set("Tolong pilih warna dan ukuran.")
 
 
 def open_transactions():
@@ -297,6 +306,7 @@ def add_size():
             messagebox.showerror("Error", "Please enter both size code and display name!")
 
     Button(add_size_window, text="Add Size", command=save_size).pack(pady=20)
+
 
 # Placeholder functions for menu actions
 def open_main_menu():
@@ -501,12 +511,11 @@ file_menu.add_command(label="Exit", command=exit_app)
 menubar.add_cascade(label="File", menu=file_menu)
 
 # Help Menu
-# Help Menu
 help_menu = Menu(menubar, tearoff=0)
 help_menu.add_command(label="Add Furniture", command=add_furniture)
 help_menu.add_command(label="Add Color", command=add_color)
-help_menu.add_command(label="Add Size", command=add_size)  # Added this line
-help_menu.add_command(label="Clear Transaction", command=delete_transaction)
+help_menu.add_command(label="Add Size", command=add_size)  
+help_menu.add_command(label="Delete Transaction", command=delete_transaction)
 menubar.add_cascade(label="Help", menu=help_menu)
 
 # Attach the menu bar to the root window
