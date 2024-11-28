@@ -12,7 +12,7 @@ root.title("Torica Furniture Store")
 furniturecodes = ['1', '2', '3', '4', '5']
 furniturenames = ['Sofa', 'Lemari', 'Kursi', 'Meja', 'Lampu']
 cnames = StringVar(value=furniturenames)
-persediaan = {'1': 280, '2': 110, '3': 450, '4': 350, '5': 560}
+persediaan = {'1': 280, '2': 190, '3': 450, '4': 350, '5': 560}
 
 # Color dictionary for furniture colors
 color_dict = {'merah': 'Merah', 'biru': 'Biru', 'kuning': 'Kuning', 'hijau': 'Hijau'}
