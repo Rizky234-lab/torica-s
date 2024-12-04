@@ -1,12 +1,15 @@
 from tkinter import *
-from tkinter import ttk
-from tkinter import messagebox
+from tkinter import Tk, Button, Toplevel, messagebox, StringVar, Label, Entry, OptionMenu, ttk, OptionMenu, BOTH
 from datetime import datetime  # For transaction timestamps
 
 # Main application window
 root = Tk()
 root.geometry("700x400")
 root.title("Torica Furniture Store")
+
+# Flags
+logged_in = True
+
 
 # Initialize furniture "databases"
 furniturecodes = ['1', '2', '3', '4', '5']
@@ -15,10 +18,10 @@ cnames = StringVar(value=furniturenames)
 persediaan = {'1': 280, '2': 190, '3': 450, '4': 350, '5': 560}
 
 # Color dictionary for furniture colors
-color_dict = {'merah': 'Merah', 'biru': 'Biru', 'kuning': 'Kuning', 'hijau': 'Hijau'}
-size_dict = {'small': 'Small', 'medium': 'Medium', 'big': 'Big'}
-
-
+colornames = ['Merah', 'Biru','Kuning','Hijau']
+colorcodes = ['1','2','3','4']
+sizenames = ['Small', 'Medium','Big']
+sizecodes = ['1','2','3'] 
 
 # State variables
 selected_color = StringVar()
@@ -33,6 +36,9 @@ transactions = []
 login_frame = Frame(root, bg="blue")
 welcome_frame = Frame(root, bg="blue")
 main_frame = Frame(root, bg="white")
+furniture_management_frame = Frame(root, bg="white")
+color_management_frame = Frame(root, bg="white")
+size_management_frame = Frame(root, bg="white")
 
 # Switch between frames
 def show_frame(frame):
@@ -106,7 +112,7 @@ def sendtocart(*args):
             transaction = {
                 "timestamp": timestamp,
                 "furniture": name,
-                "color": color_dict[color],
+                "color": colornames[color.index(color)],
                 "size": size.capitalize(),
                 "price": f"Rp. {price:,.0f}"
             }
@@ -118,7 +124,6 @@ def sendtocart(*args):
                 sentmsg.set(f"Maaf, stok {name} sudah habis!")
             else:
                 sentmsg.set("Tolong pilih warna dan ukuran.")
-
 
 def open_transactions():
     """Open a new window to display all transactions."""
@@ -166,28 +171,45 @@ def save_transactions_to_file():
     except Exception as e:
         messagebox.showerror("Error", f"Could not save transactions: {str(e)}")
 
+def furniture_actions():
+    """Provide a comprehensive furniture management dialog."""
+    if not logged_in:
+        messagebox.showerror("Access Denied", "You must log in first!")
+        return
+
+    # Create a dialog window for furniture actions
+    furniture_action_window = Toplevel(root)
+    furniture_action_window.title("Furniture Management")
+    furniture_action_window.geometry("300x250")
+
+    # Create buttons for different furniture actions
+    Button(furniture_action_window, text="View Furniture", command=view_furniture).pack(pady=5)
+    Button(furniture_action_window, text="Add Furniture", command=add_furniture).pack(pady=5)
+    Button(furniture_action_window, text="Edit Furniture", command=edit_furniture).pack(pady=5)
+    Button(furniture_action_window, text="Delete Furniture", command=open_delete_furniture).pack(pady=5)
+
+def view_furniture():
+    """Open the furniture view window."""
+    furniture_window = Toplevel(root)
+    furniture_window.title("Furniture List")
+    furniture_window.geometry("500x300")
+
+    columns = ("Code", "Name", "Stock")
+    tree = ttk.Treeview(furniture_window, columns=columns, show="headings")
+    tree.heading("Code", text="Code")
+    tree.heading("Name", text="Name")
+    tree.heading("Stock", text="Stock")
+
+    # Insert furniture data
+    for i, name in enumerate(furniturenames):
+        code = furniturecodes[i]
+        stock = persediaan.get(code, 0)
+        tree.insert("", "end", values=(code, name, stock))
+
+    tree.pack(expand=True, fill=BOTH, padx=10, pady=10)
+
 def add_furniture():
-    """Allow user to manually add a new furniture item."""
-    def save_furniture():
-        name = furniture_name_var.get()
-        code = str(len(furniturecodes) + 1)  # Generate new code
-        stock = stock_var.get()
-        
-        if name and stock.isdigit():
-            furniturenames.append(name)
-            furniturecodes.append(code)
-            persediaan[code] = int(stock)
-            cnames.set(furniturenames)  # Update listbox display
-            
-            # Save the new furniture to a text file
-            with open("data_furniture.txt", "a") as file:
-                file.write(f"{code}:{name}\n")
-
-            add_window.destroy()
-            messagebox.showinfo("Success", f"{name} has been added to the inventory!")
-        else:
-            messagebox.showerror("Error", "Please enter a valid name and stock quantity.")
-
+    """Open the add furniture window."""
     add_window = Toplevel(root)
     add_window.title("Add New Furniture")
     add_window.geometry("300x200")
@@ -201,112 +223,466 @@ def add_furniture():
     Label(add_window, text="Stock Quantity:").pack(pady=5)
     Entry(add_window, textvariable=stock_var).pack(pady=5)
 
-    Button(add_window, text="Add Furniture", command=save_furniture).pack(pady=10)
+    def save_furniture():
+        code = str(len(furniturecodes) + 1)
+        name = furniture_name_var.get().strip()
+        stock = stock_var.get().strip()
+
+        if name and code.isdigit():
+            furniturecodes.append(code)
+            furniturenames.append(name)
+            persediaan[code] = int(stock)
+
+            with open("data_furniture.txt", "a") as file:
+                file.write(f"{code}:{name}\n")
+
+            messagebox.showinfo("Success", f"Furniture '{name}' has been added!")
+            add_window.destroy()
+        else:
+            messagebox.showerror("Error", "Please provide valid inputs.")
+
+    Button(add_window, text="Save", command=save_furniture).pack(pady=10)
+
+def edit_furniture():
+    """Open the edit furniture window."""
+    if not furniturenames:
+        messagebox.showinfo("Edit Furniture", "No furniture to edit.")
+        return
+
+    edit_window = Toplevel(root)
+    edit_window.title("Edit Furniture")
+    edit_window.geometry("400x300")
+
+    selected_furniture_var = StringVar()
+    furniture_options = [f"{code}. {name}" for code, name in zip(furniturecodes, furniturenames)]
+    selected_furniture_var.set(furniture_options[0])
+
+    Label(edit_window, text="Select Furniture to Edit:").pack(pady=5)
+    furniture_menu = OptionMenu(edit_window, selected_furniture_var, *furniture_options)
+    furniture_menu.pack(pady=5)
+
+    name_var = StringVar()
+    stock_var = StringVar()
+
+    Label(edit_window, text="New Furniture Name:").pack(pady=5)
+    Entry(edit_window, textvariable=name_var).pack(pady=5)
+
+    Label(edit_window, text="New Stock Quantity:").pack(pady=5)
+    Entry(edit_window, textvariable=stock_var).pack(pady=5)
+
+    def save_furniture_changes():
+        selected_item = selected_furniture_var.get()
+        code = selected_item.split(".")[0]
+        index = furniturecodes.index(code)
+
+        new_name = name_var.get().strip()
+        new_stock = stock_var.get().strip()
+
+        if new_name and new_stock.isdigit():
+            furniturenames[index] = new_name
+            persediaan[code]=int(new_stock)
+
+            with open("data_furniture.txt", "w") as file:
+                for code, name,  in zip(furniturecodes, furniturenames):
+                    file.write(f"{code}:{name}\n")
+
+            messagebox.showinfo("Success", "Furniture updated successfully!")
+            edit_window.destroy()
+        else:
+            messagebox.showerror("Error", "Please enter a valid name.")
+
+    Button(edit_window, text="Save Changes", command=save_furniture_changes).pack(pady=10)
+
+def open_delete_furniture():
+    """Open the delete furniture window."""
+    if not furniturenames:
+        messagebox.showinfo("Delete Furniture", "No furniture to delete.")
+        return
+
+    delete_window = Toplevel(root)
+    delete_window.title("Delete Furniture")
+    delete_window.geometry("400x200")
+
+    selected_furniture_var = StringVar()
+    furniture_options = [f"{code}. {name}" for code, name in zip(furniturecodes, furniturenames)]
+    selected_furniture_var.set(furniture_options[0])
+
+    Label(delete_window, text="Select Furniture to Delete:").pack(pady=10)
+    furniture_menu = OptionMenu(delete_window, selected_furniture_var, *furniture_options)
+    furniture_menu.pack(pady=10)
+
+    def confirm_delete():
+        selected_item = selected_furniture_var.get()
+        code = selected_item.split(".")[0]
+        index = furniturecodes.index(code)
+
+        confirm = messagebox.askyesno(
+            "Delete Confirmation",
+            f"Are you sure you want to delete {furniturenames[index]}?"
+        )
+
+        if confirm:
+            furniturenames.pop(index)
+            furniturecodes.pop(index)
+            del persediaan[code]
+
+            save_furniture_data()
+            with open("data_furniture.txt", "w") as file:
+                for code, name in zip(furniturecodes, furniturenames):
+                    file.write(f"{code}:{name}\n")
+
+            messagebox.showinfo("Delete Successful", "Furniture item deleted.")
+            delete_window.destroy()
+
+    Button(delete_window, text="Delete Furniture", command=confirm_delete).pack(pady=20)
+
+def save_furniture_data():
+    """Save furniture data to a text file."""
+    with open("data_furniture.txt", "w") as file:
+        for code, name in zip(furniturecodes, furniturenames):
+            file.write(f"{code}:{name}:{persediaan.get(code, 0)}\n")
+
+def load_furniture_data():
+    """Load furniture data from a text file."""
+    global furniturecodes, furniturenames, persediaan
+    try:
+        with open("data_furniture.txt", "r") as file:
+            furniturecodes.clear()
+            furniturenames.clear()
+            persediaan.clear()
+            
+            for line in file:
+                code, name, stock = line.strip().split(":")
+                furniturecodes.append(code)
+                furniturenames.append(name)
+                persediaan[code] = int(stock)
+    except FileNotFoundError:
+        pass
+
+def color_actions():
+    """Provide a comprehensive color management dialog."""
+    color_action_window = Toplevel(root)
+    color_action_window.title("Color Management")
+    color_action_window.geometry("300x250")
+
+    Button(color_action_window, text="View Colors", command=view_color).pack(pady=5)
+    Button(color_action_window, text="Add Color", command=add_color).pack(pady=5)
+    Button(color_action_window, text="Edit Color", command=edit_color).pack(pady=5)
+    Button(color_action_window, text="Delete Color", command=open_delete_color).pack(pady=5)
+
+def view_color():
+    """Open the color view window."""
+    color_window = Toplevel(root)
+    color_window.title("Color List")
+    color_window.geometry("500x300")
+
+    columns = ("Code", "Name")
+    tree = ttk.Treeview(color_window, columns=columns, show="headings")
+    tree.heading("Code", text="Code")
+    tree.heading("Name", text="Name")
+
+    for code, name in zip(colorcodes, colornames):
+        tree.insert("", "end", values=(code, name))
+    tree.pack(expand=True, fill=BOTH, padx=10, pady=10)
 
 def add_color():
-    """Allow user to add new color options for furniture."""
+    """Open the add color window."""
     add_color_window = Toplevel(root)
     add_color_window.title("Add New Color")
     add_color_window.geometry("300x200")
 
-    # Variables for new color
-    color_code_var = StringVar()
-    color_name_var = StringVar()  # This will store the display name
+    color_name_var = StringVar()
 
-    # Create and layout widgets
-    Label(add_color_window, text="Color Code:").pack(pady=5)
-    Entry(add_color_window, textvariable=color_code_var).pack(pady=5)
-
-    Label(add_color_window, text="Display Name:").pack(pady=5)
-    Entry(add_color_window, textvariable=color_name_var).pack(pady=5)  # Now using color_name_var
+    Label(add_color_window, text="Color Name:").pack(pady=5)
+    Entry(add_color_window, textvariable=color_name_var).pack(pady=5)
 
     def save_color():
-        code = color_code_var.get().strip().lower()
+        code = str(len(furniturecodes) + 1)
         name = color_name_var.get().strip()
 
-        if code and name:
-            if code in color_dict:
-                messagebox.showerror("Error", "This color code already exists!")
-                return
-            
-            # Add new color to dictionary
-            color_dict[code] = name
+        if name and code:
+            colornames.append(name)
+            colorcodes.append(code)
 
-            # Save the new color to a text file
             with open("data_warna.txt", "a") as file:
                 file.write(f"{code}:{name}\n")
 
-            # Create new radio button for the color
-            new_radio = ttk.Radiobutton(c, text=name, variable=selected_color, value=code)
-            
-            # Find the row after the last color radio button
-            last_row = 0
-            for widget in c.grid_slaves():
-                if isinstance(widget, ttk.Radiobutton) and widget.grid_info()['column'] == 1:
-                    last_row = max(last_row, widget.grid_info()['row'])
-            
-            # Place the new radio button
-            new_radio.grid(column=1, row=last_row + 1, sticky=W, padx=20)
-
-            messagebox.showinfo("Success", f"New color '{name}' has been added!")
+            messagebox.showinfo("Success", f"Color '{name}' has been added!")
             add_color_window.destroy()
         else:
-            messagebox.showerror("Error", "Please enter both color code and display name!")
+            messagebox.showerror("Error", "Please provide valid inputs.")
 
-    Button(add_color_window, text="Add Color", command=save_color).pack(pady=20)
+    Button(add_color_window, text="Save", command=save_color).pack(pady=10)
+
+
+def edit_color():
+    """Open the edit color window."""
+    if not colornames:
+        messagebox.showinfo("Edit Color", "No colors to edit.")
+        return
+
+    edit_window = Toplevel(root)
+    edit_window.title("Edit Color")
+    edit_window.geometry("400x300")
+
+    selected_color_var = StringVar()
+    color_options = [f"{code}. {name}" for code, name in zip(colorcodes, colornames)]
+    selected_color_var.set(color_options[0])
+
+    Label(edit_window, text="Select Color to Edit:").pack(pady=5)
+    OptionMenu(edit_window, selected_color_var, *color_options).pack(pady=5)
+
+    name_var = StringVar()
+
+    Label(edit_window, text="New Color Name:").pack(pady=5)
+    Entry(edit_window, textvariable=name_var).pack(pady=5)
+
+
+    def save_color_changes():
+        selected_option = selected_color_var.get()
+        code = selected_option.split(".")[0]
+        index = colorcodes.index(code)
+        new_name = name_var.get().strip()
+
+        if new_name:
+            colornames[index] = new_name
+
+            with open("data_warna.txt", "w") as file:
+                for code, name in zip(colorcodes, colornames):
+                    file.write(f"{code}:{name}\n")
+
+            messagebox.showinfo("Success", "Color updated successfully!")
+            edit_window.destroy()
+        else:
+            messagebox.showerror("Error", "Please enter a valid name.")
+
+    Button(edit_window, text="Save Changes", command=save_color_changes).pack(pady=10)
+
+
+def open_delete_color():
+    """Open the delete color window."""
+    if not colornames:
+        messagebox.showinfo("Delete Color", "No colors to delete.")
+        return
+
+    delete_window = Toplevel(root)
+    delete_window.title("Delete Color")
+    delete_window.geometry("400x200")
+
+    selected_color_var = StringVar()
+    color_options = [f"{code}. {name}" for code, name in zip(colorcodes, colornames)]
+    selected_color_var.set(color_options[0])
+
+    Label(delete_window, text="Select Color to Delete:").pack(pady=10)
+    OptionMenu(delete_window, selected_color_var, *color_options).pack(pady=10)
+
+    def confirm_delete():
+        selected_item = selected_color_var.get()
+        code = selected_item.split(".")[0]
+        index = colorcodes.index(code)
+
+        confirm = messagebox.askyesno(
+            "Delete Confirmation",
+            f"Are you sure you want to delete {colornames[index]}?"
+        )
+
+        if confirm:
+            colornames.pop(index)
+            colorcodes.pop(index)
+
+            save_color_data()
+            with open("data_warna.txt", "w") as file:
+                for code, name in zip(colorcodes, colornames):
+                    file.write(f"{code}:{name}\n")
+
+            messagebox.showinfo("Delete Successful", "Color item deleted.")
+            delete_window.destroy()
+
+    Button(delete_window, text="Delete Color", command=confirm_delete).pack(pady=20)
+
+def save_color_data():
+    """Save color data to a text file."""
+    with open("data_warna.txt", "w") as file:
+        for code, name in zip(colorcodes, colornames):
+            file.write(f"{code}:{name}\n")
+
+def load_color_data():
+    """Load color data from a text file."""
+    global colorcodes, colornames
+    try:
+        with open("data_warna.txt", "r") as file:
+            colorcodes.clear()
+            colornames.clear()
+            
+            for line in file:
+                code, name = line.strip().split(":")
+                colorcodes.append(code)
+                colornames.append(name)
+    except FileNotFoundError:
+        pass
+
+def size_actions():
+    """Provide a comprehensive size management dialog."""
+    size_action_window = Toplevel(root)
+    size_action_window.title("Size Management")
+    size_action_window.geometry("300x250")
+
+    Button(size_action_window, text="View Size", command=view_size).pack(pady=5)
+    Button(size_action_window, text="Add Size", command=add_size).pack(pady=5)
+    Button(size_action_window, text="Edit Size", command=edit_size).pack(pady=5)
+    Button(size_action_window, text="Delete Size", command=open_delete_size).pack(pady=5)
+
+def view_size():
+    """Open the size view window."""
+    size_window = Toplevel(root)
+    size_window.title("Size List")
+    size_window.geometry("500x300")
+
+    columns = ("Code", "Name")
+    tree = ttk.Treeview(size_window, columns=columns, show="headings")
+    tree.heading("Code", text="Code")
+    tree.heading("Name", text="Name")
+    tree.pack(expand=True, fill=BOTH, padx=10, pady=10)
+
+    for code, name in zip(sizecodes, sizenames):
+        tree.insert("", "end", values=(code, name))
 
 def add_size():
-    """Allow user to add new size options for furniture."""
+    """Open the add size window."""
     add_size_window = Toplevel(root)
     add_size_window.title("Add New Size")
     add_size_window.geometry("300x200")
 
-    # Variables for new size
     size_code_var = StringVar()
-    size_name_var = StringVar()  # This will store the display name
+    size_name_var = StringVar()
 
-    # Create and layout widgets
     Label(add_size_window, text="Size Code:").pack(pady=5)
     Entry(add_size_window, textvariable=size_code_var).pack(pady=5)
 
     Label(add_size_window, text="Display Name:").pack(pady=5)
-    Entry(add_size_window, textvariable=size_name_var).pack(pady=5)  # Now using size_name_var
+    Entry(add_size_window, textvariable=size_name_var).pack(pady=5)
 
     def save_size():
-        code = size_code_var.get().strip().lower()
+        code = size_code_var.get().strip()
         name = size_name_var.get().strip()
 
         if code and name:
-            if code in size_dict:
-                messagebox.showerror("Error", "This size code already exists!")
-                return
-            
-            # Add new size to dictionary
-            size_dict[code] = name
+            sizecodes.append(code)
+            sizenames.append(name)
 
-            # Save the new size to a text file
             with open("data_ukuran.txt", "a") as file:
                 file.write(f"{code}:{name}\n")
 
-            # Create new radio button for the size
-            new_radio = ttk.Radiobutton(c, text=name, variable=selected_size, value=code)
-            
-            # Find the row after the last size radio button
-            last_row = 0
-            for widget in c.grid_slaves():
-                if isinstance(widget, ttk.Radiobutton) and widget.grid_info()['column'] == 2:
-                    last_row = max(last_row, widget.grid_info()['row'])
-            
-            # Place the new radio button
-            new_radio.grid(column=2, row=last_row + 1, sticky=W, padx=20)
-
-            messagebox.showinfo("Success", f"New size '{name}' has been added!")
+            messagebox.showinfo("Success", f"Size '{name}' has been added!")
             add_size_window.destroy()
         else:
-            messagebox.showerror("Error", "Please enter both size code and display name!")
+            messagebox.showerror("Error", "Please provide valid inputs.")
 
-    Button(add_size_window, text="Add Size", command=save_size).pack(pady=20)
+    Button(add_size_window, text="Save", command=save_size).pack(pady=10)
 
+def edit_size():
+    """Open the edit size window."""
+    if not sizenames:
+        messagebox.showinfo("Edit Size", "No size to edit.")
+        return
+
+    edit_window = Toplevel(root)
+    edit_window.title("Edit Size")
+    edit_window.geometry("400x300")
+
+    selected_size_var = StringVar()
+    size_options = [f"{code}. {name}" for code, name in zip(sizecodes, sizenames)]
+    selected_size_var.set(size_options[0])
+
+    Label(edit_window, text="Select Size to Edit:").pack(pady=5)
+    OptionMenu(edit_window, selected_size_var, *size_options).pack(pady=5)
+
+    name_var = StringVar()
+    Label(edit_window, text="New Size Name:").pack(pady=5)
+    Entry(edit_window, textvariable=name_var).pack(pady=5)
+
+    def save_changes():
+        selected_option = selected_size_var.get()
+        code = selected_option.split(".")[0]
+        index = sizecodes.index(code)
+        new_name = name_var.get().strip()
+
+        if new_name:
+            sizenames[index] = new_name
+
+            with open("data_ukuran.txt", "w") as file:
+                for code, name in zip(sizecodes, sizenames):
+                    file.write(f"{code}:{name}\n")
+
+            messagebox.showinfo("Success", "Size updated successfully!")
+            edit_window.destroy()
+        else:
+            messagebox.showerror("Error", "Please enter a valid name.")
+
+    Button(edit_window, text="Save Changes", command=save_changes).pack(pady=10)
+
+def open_delete_size():
+    """Open the delete size window."""
+    if not sizenames:
+        messagebox.showinfo("Delete Size", "No size to delete.")
+        return
+
+    delete_window = Toplevel(root)
+    delete_window.title("Delete Size")
+    delete_window.geometry("400x200")
+
+    selected_size_var = StringVar()
+    size_options = [f"{code}. {name}" for code, name in zip(sizecodes, sizenames)]
+    selected_size_var.set(size_options[0])
+
+    Label(delete_window, text="Select Size to Delete:").pack(pady=10)
+    OptionMenu(delete_window, selected_size_var, *size_options).pack(pady=10)
+
+    def confirm_delete():
+        selected_option = selected_size_var.get()
+        code = selected_option.split(".")[0]
+        index = sizecodes.index(code)
+
+        confirm = messagebox.askyesno(
+            "Delete Confirmation",
+            f"Are you sure you want to delete '{sizenames[index]}'?"
+        )
+
+        if confirm:
+            del sizecodes[index]
+            del sizenames[index]
+
+            save_size_data()
+
+            with open("data_ukuran.txt", "w") as file:
+                for code, name in zip(sizecodes, sizenames):
+                    file.write(f"{code}:{name}\n")
+
+            messagebox.showinfo("Delete Successful", "Size item deleted.")
+            delete_window.destroy()
+
+    Button(delete_window, text="Delete", command=confirm_delete).pack(pady=20)
+
+def save_size_data():
+    """Save size data to a text file."""
+    with open("data_ukuran.txt", "w") as file:
+        for code, name in zip(sizecodes, sizenames):
+            file.write(f"{code}:{name}\n")
+
+def load_size_data():
+    """Load size data from a text file."""
+    global sizecodes, sizenames
+    try:
+        with open("data_ukuran.txt", "r") as file:
+            sizecodes.clear()
+            sizenames.clear()
+            
+            for line in file:
+                code, name = line.strip().split(":")
+                sizecodes.append(code)
+                sizenames.append(name)
+    except FileNotFoundError:
+        pass
 
 # Placeholder functions for menu actions
 def open_main_menu():
@@ -396,7 +772,7 @@ def edit_transaction():
     Button(edit_window, text="Save Changes", command=save_edited_transaction).pack(pady=20)
 
 # Usage: Attach the new edit_transaction function to the help menu.
-    help_menu.add_command(label="Edit Transaction", command=edit_transaction)
+    data_mastering_menu.add_command(label="Edit Transaction", command=edit_transaction)
 
 
 def delete_transaction():
@@ -510,13 +886,13 @@ file_menu.add_separator()
 file_menu.add_command(label="Exit", command=exit_app)
 menubar.add_cascade(label="File", menu=file_menu)
 
-# Help Menu
-help_menu = Menu(menubar, tearoff=0)
-help_menu.add_command(label="Add Furniture", command=add_furniture)
-help_menu.add_command(label="Add Color", command=add_color)
-help_menu.add_command(label="Add Size", command=add_size)  
-help_menu.add_command(label="Delete Transaction", command=delete_transaction)
-menubar.add_cascade(label="Help", menu=help_menu)
+# Data mastering Menu
+data_mastering_menu = Menu(menubar, tearoff=0)
+data_mastering_menu.add_command(label="Furniture", command= furniture_actions)
+data_mastering_menu.add_command(label="Color", command= color_actions)
+data_mastering_menu.add_command(label="Size", command= size_actions)  
+data_mastering_menu.add_command(label="Delete Transaction", command=delete_transaction)
+menubar.add_cascade(label="Data Mastering", menu=data_mastering_menu)
 
 # Attach the menu bar to the root window
 root.config(menu=menubar)
