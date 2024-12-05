@@ -146,39 +146,6 @@ class Furniture(DataItem):
             return True
         return False
 
-class Stock (DataItem):
-    def __init__(self, file_handler=None):
-        super().__init__('data_stock.txt', 'stock', file_handler)
-
-    def list_stock(self):
-        #Return all stock data from file
-        data = self.file_handler.bacafile(self.file_name) or ""
-        return self.parse_dictionary(data)
-    
-    def tambah_stock(self, stock):
-        data_dict = self.list_stock()
-        new_key = str(max(map(int, data_dict.keys()), default=0) + 1)
-        data_dict[new_key] = stock
-        self._tulis_kembali_data(data_dict)
-        return new_key
-    
-    def hapus_stock(self, data_key):
-        data_dict = self.list_stock()
-        if data_key in data_dict:
-            del data_dict[data_key]
-            self._tulis_kembali_data(data_dict)
-            return True
-        return False
-    
-    def edit_stock(self, data_key):
-        data_dict = self.list_stock()
-        if data_key in data_dict:
-            new_stock = input(f"Enter new stock for ID {data_key} (current: {data_dict[data_key]}): ")
-            data_dict[data_key] = new_stock
-            self._tulis_kembali_data(data_dict)
-            return True
-        return False
-
 class Price(DataItem):
     def __init__(self, file_handler=None):
         super().__init__('data_harga.txt', 'price', file_handler)
@@ -242,17 +209,16 @@ class Transaction(DataItem):
         data = self.file_handler.bacafile(self.file_name) or ""
         return self.parse_dictionary(data)
 
-    def tambah_transaksi(self, furniture_code, color_code, size_code, price_code, stock_code):
+    def tambah_transaksi(self, furniture_code, color_code, size_code, price_code):
         data_dict = self.list_transaksi()
         new_key = str(max((int(k) for k in data_dict.keys() if k.isdigit()), default=0) + 1)
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d")
 
          # Store transaction data as a formatted string
-        transaction_details = f"Timestamp: {timestamp}, Furniture: {furniture_code}, Color: {color_code}, Size: {size_code}, Price: {price_code}, Stock: {stock_code}"
+        transaction_details = f"Timestamp: {timestamp}, Furniture: {furniture_code}, Color: {color_code}, Size: {size_code}, Price: {price_code}"
         data_dict[new_key] = transaction_details
         self._tulis_kembali_data(data_dict)
         return new_key
-
 
     def hapus_transaksi(self, trans_id):
         data_dict = self.list_transaksi()
@@ -265,7 +231,7 @@ class Transaction(DataItem):
 class DateTimeHandler:
     @staticmethod
     def get_current_timestamp():
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return datetime.now().strftime("%Y-%m-%d")
 
     @staticmethod
     def format_date(date_str, current_format="%Y-%m-%d", desired_format="%d-%m-%Y"):
