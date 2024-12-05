@@ -1,4 +1,4 @@
-from fungsi import Warna, Ukuran, Furniture, Transaction, Stock, Price, datetime
+from fungsi import Warna, Ukuran, Furniture, Transaction, Price, datetime
 
 def main():
     # Create instances of the classes
@@ -7,7 +7,6 @@ def main():
     furniture_handler = Furniture()
     transaksi_handler = Transaction()
     price_handler = Price()
-    stock_handler = Stock()
 
     # Initialize a list to store transactions
     transactions = []
@@ -32,8 +31,7 @@ def main():
             print("2. View Size Data")
             print("3. View Furniture Data")
             print("4. View Price Data")
-            print('5. View Stock Data')
-            pilihan_lihat = input("Enter your choice (1-5): ")
+            pilihan_lihat = input("Enter your choice (1-4): ")
             if pilihan_lihat == '1':
                     data_dict = warna_handler.list_warna()
                     print("\nColor Data:")
@@ -51,10 +49,7 @@ def main():
             elif pilihan_lihat == '4':
                     data_dict = price_handler.list_price()
                     print(data_dict)
-            
-            elif pilihan_lihat == '5':
-                    data_dict = stock_handler.list_stock()
-                    print(data_dict)
+                      
             else:
                     print("Invalid choice.")
 
@@ -64,8 +59,7 @@ def main():
             print("2. Add Size")
             print("3. Add Furniture")
             print("4. Add Price")
-            print("5. Add Stock")
-            pilihan_tambah = input("Enter your choice (1-5): ")
+            pilihan_tambah = input("Enter your choice (1-4): ")
         
             if pilihan_tambah == '1':
                     new_data= input("Enter new color: ")
@@ -87,11 +81,6 @@ def main():
                 price_handler.tambah_price(new_data)
                 print(f"Price '{new_data}' has been successfully added.")
 
-            elif pilihan_tambah == '5':
-                new_data = input("Enter stock: ")
-                stock_handler.tambah_stock(new_data)
-                print(f"Stock {new_data}' has been successfully added.")
-
             else:
                     print("Invalid choice.")
 
@@ -101,8 +90,7 @@ def main():
             print("2. Delete Size")
             print("3. Delete Furniture")
             print("4. Delete Price")
-            print("5. Delete Stock")
-            pilihan_hapus = input("Enter your choice (1-5): ")
+            pilihan_hapus = input("Enter your choice (1-4): ")
 
             if pilihan_hapus == '1':
                     id_hapus = input("Enter Color ID to delete: ")
@@ -132,12 +120,6 @@ def main():
                     else:
                         print(f"Price ID '{id_hapus}' not found.")
 
-            elif pilihan_hapus == '5':
-                    id_hapus = input("Enter Price ID to delete: ")
-                    if stock_handler.hapus_stock(id_hapus):
-                        print(f"Stock with ID '{id_hapus}' has been successfully deleted.")
-                    else:
-                        print(f"Stock ID '{id_hapus}' not found.")
             else:
                     print("Invalid choice.")
         
@@ -147,8 +129,7 @@ def main():
             print("2. Edit Size")
             print("3. Edit Furniture")
             print("4. Edit Price")
-            print("5. Edit Stock")
-            pilihan_edit = input("Enter your choice (1-5): ")
+            pilihan_edit = input("Enter your choice (1-4): ")
 
             if pilihan_edit == '1':
                     id_edit = input("Enter Color ID to edit: ")
@@ -177,13 +158,6 @@ def main():
                         print(f"Price with ID '{id_edit}' has been successfully edited.")
                     else:
                         print(f"Price ID '{id_edit}' not found.")
-
-            elif pilihan_edit == '5':
-                    id_edit = input("Enter Stock ID to edit: ")
-                    if stock_handler. edit_stock(id_edit):
-                        print(f"Stock with ID '{id_edit}' has been successfully edited.")
-                    else:
-                        print(f"Stock ID '{id_edit}' not found.")
             else:
                     print("Invalid choice.")
            
@@ -193,12 +167,11 @@ def main():
             furniture_code = input("Add the code furniture: ")
             size_code = input("Add the size code: ")
             price_code = input ("Add the price code: ")
-            stock_code = input ("Add the stock code: ")
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = datetime.now().strftime("%Y-%m-%d")
         
  
                 # Changed this line to pass only 3 arguments (plus self makes 4)
-            transaksi = transaksi_handler.tambah_transaksi(furniture_code, color_code, size_code,price_code,stock_code)
+            transaksi = transaksi_handler.tambah_transaksi(furniture_code, color_code, size_code,price_code)
 
             new_transaction = {
                     "timestamp": timestamp,
@@ -206,7 +179,6 @@ def main():
                     "color": color_code,
                     "size": size_code,
                     "price": price_code,
-                    "stock":stock_code
                     }
             transactions.append(new_transaction)
             print(f"Transaction successfully added: {new_transaction}")
@@ -241,7 +213,6 @@ def main():
                     print(f"Color: {transaction['color']}")
                     print(f"Size: {transaction['size']}")
                     print(f"Price: {transaction['price']}")
-                    print(f"Stock: {transaction['stock']}")
             else:
                 print("No transactions available.")
 
