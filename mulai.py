@@ -15,7 +15,8 @@ logged_in = True
 furniturecodes = ['1', '2', '3', '4', '5']
 furniturenames = ['Sofa', 'Lemari', 'Kursi', 'Meja', 'Lampu']
 cnames = StringVar(value=furniturenames)
-persediaan = {'1': 280, '2': 190, '3': 450, '4': 350, '5': 560}
+harga = {'1': 500000, '2': 750000, '3': 250000, '4': 600000, '5': 150000}
+
 
 # Color dictionary for furniture colors
 colornames = ['Merah', 'Biru','Kuning','Hijau']
@@ -74,24 +75,23 @@ Button(welcome_frame, text="Click me to see our furniture collection",
        command=lambda: show_frame(main_frame)).pack(pady=10)
 
 # --- Main Menu Screen (Furniture App) ---
-def showPersediaan(*args):
+def showPrice(*args):
     idxs = lbox.curselection()
     if len(idxs) == 1:
         idx = int(idxs[0])
         code = furniturecodes[idx]
         name = furniturenames[idx]
-        stock = persediaan[code]
-        statusmsg.set(f"Persediaan {name} ({code}) {stock}")
+        pricedata = harga[code]
+        statusmsg.set(f"Persediaan {name} ({code}) {pricedata}")
     sentmsg.set('')  # Clear sent message
 
 def calculate_price(furniture_code, size):
     """Calculate the price of a furniture item based on its code and size."""
-    base_price = 500_000  # Base price for code '1' and small size
-    price_increase = int(furniture_code) * 500  # Increase price based on furniture code
-    size_increase = {"small": 0, "medium": 500_000, "big": 1_000_000}  # Size-based increase
-    
+    base_price = harga.get(furniture_code)  # Get base price from harga
+    size_increase = {"small": 0, "medium": 200_000, "big": 500_000}  # Size-based increase
+ 
     # Calculate final price
-    return base_price + price_increase + size_increase.get(size, 0)
+    return base_price + size_increase.get(size, 0)
 
 def sendtocart(*args):
     idxs = lbox.curselection()
@@ -102,12 +102,11 @@ def sendtocart(*args):
         code = furniturecodes[idx]
         color = selected_color.get()
         size = selected_size.get()  # Get selected size
-
-        if persediaan[code] > 0 and color and size:
+        
+        
+        if harga[code] > 0 and color and size:
             price = calculate_price(code, size)  # Calculate price based on furniture code and size
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            persediaan[code] -= 1
+            timestamp = datetime.now().strftime("%Y-%m-%d")
             
             transaction = {
                 "timestamp": timestamp,
@@ -115,12 +114,13 @@ def sendtocart(*args):
                 "color": colornames[color.index(color)],
                 "size": size.capitalize(),
                 "price": f"Rp. {price:,.0f}"
+
             }
             transactions.append(transaction)
-            sentmsg.set(f"Transaksi anda: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) seharga {transaction['price']} | Stok tersisa: {persediaan[code]}")
-            statusmsg.set(f"Persediaan {name} ({code}) {persediaan[code]}")
+            sentmsg.set(f"Transaksi anda: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) seharga {transaction['price']}")
+            statusmsg.set(f"Persediaan {name} ({code}) {harga[code]:,.0f}")
         else:
-            if persediaan[code] <= 0:
+            if harga.get[code] <= 0:
                 sentmsg.set(f"Maaf, stok {name} sudah habis!")
             else:
                 sentmsg.set("Tolong pilih warna dan ukuran.")
@@ -194,17 +194,17 @@ def view_furniture():
     furniture_window.title("Furniture List")
     furniture_window.geometry("500x300")
 
-    columns = ("Code", "Name", "Stock")
+    columns = ("Code", "Name", "Price")
     tree = ttk.Treeview(furniture_window, columns=columns, show="headings")
     tree.heading("Code", text="Code")
     tree.heading("Name", text="Name")
-    tree.heading("Stock", text="Stock")
+    tree.heading("Price", text="Price")
 
     # Insert furniture data
     for i, name in enumerate(furniturenames):
         code = furniturecodes[i]
-        stock = persediaan.get(code, 0)
-        tree.insert("", "end", values=(code, name, stock))
+        price = harga.get(code, 0)
+        tree.insert("", "end", values=(code, name, f"Rp. {price:,.0f}"))
 
     tree.pack(expand=True, fill=BOTH, padx=10, pady=10)
 
@@ -215,23 +215,23 @@ def add_furniture():
     add_window.geometry("300x200")
 
     furniture_name_var = StringVar()
-    stock_var = StringVar()
+    price_data_var = StringVar()
 
     Label(add_window, text="Furniture Name:").pack(pady=5)
     Entry(add_window, textvariable=furniture_name_var).pack(pady=5)
 
-    Label(add_window, text="Stock Quantity:").pack(pady=5)
-    Entry(add_window, textvariable=stock_var).pack(pady=5)
+    Label(add_window, text="Price (Rp):").pack(pady=5)
+    Entry(add_window, textvariable=price_data_var).pack(pady=5)
 
     def save_furniture():
         code = str(len(furniturecodes) + 1)
         name = furniture_name_var.get().strip()
-        stock = stock_var.get().strip()
+        price = price_data_var.get().strip()
 
         if name and code.isdigit():
             furniturecodes.append(code)
             furniturenames.append(name)
-            persediaan[code] = int(stock)
+            harga[code] = int(price)
 
             with open("data_furniture.txt", "a") as file:
                 file.write(f"{code}:{name}\n")
@@ -262,13 +262,13 @@ def edit_furniture():
     furniture_menu.pack(pady=5)
 
     name_var = StringVar()
-    stock_var = StringVar()
+    price_var = StringVar()
 
     Label(edit_window, text="New Furniture Name:").pack(pady=5)
     Entry(edit_window, textvariable=name_var).pack(pady=5)
 
-    Label(edit_window, text="New Stock Quantity:").pack(pady=5)
-    Entry(edit_window, textvariable=stock_var).pack(pady=5)
+    Label(edit_window, text="New Price (Rp):").pack(pady=5)
+    Entry(edit_window, textvariable=price_var).pack(pady=5)
 
     def save_furniture_changes():
         selected_item = selected_furniture_var.get()
@@ -276,11 +276,11 @@ def edit_furniture():
         index = furniturecodes.index(code)
 
         new_name = name_var.get().strip()
-        new_stock = stock_var.get().strip()
+        new_price = price_var.get().strip()
 
-        if new_name and new_stock.isdigit():
+        if new_name and new_price.isdigit():
             furniturenames[index] = new_name
-            persediaan[code]=int(new_stock)
+            harga[code]=int(new_price)
 
             with open("data_furniture.txt", "w") as file:
                 for code, name,  in zip(furniturecodes, furniturenames):
@@ -324,7 +324,7 @@ def open_delete_furniture():
         if confirm:
             furniturenames.pop(index)
             furniturecodes.pop(index)
-            del persediaan[code]
+            del harga[code]
 
             save_furniture_data()
             with open("data_furniture.txt", "w") as file:
@@ -340,22 +340,22 @@ def save_furniture_data():
     """Save furniture data to a text file."""
     with open("data_furniture.txt", "w") as file:
         for code, name in zip(furniturecodes, furniturenames):
-            file.write(f"{code}:{name}:{persediaan.get(code, 0)}\n")
+            file.write(f"{code}:{name}:{harga.get(code, 0)}\n")
 
 def load_furniture_data():
     """Load furniture data from a text file."""
-    global furniturecodes, furniturenames, persediaan
+    global furniturecodes, furniturenames, harga
     try:
         with open("data_furniture.txt", "r") as file:
             furniturecodes.clear()
             furniturenames.clear()
-            persediaan.clear()
+            harga.clear()
             
             for line in file:
-                code, name, stock = line.strip().split(":")
+                code, name, price = line.strip().split(":")
                 furniturecodes.append(code)
                 furniturenames.append(name)
-                persediaan[code] = int(stock)
+                harga[code] = int(price)
     except FileNotFoundError:
         pass
 
@@ -737,7 +737,7 @@ def edit_transaction():
 
         furniture_name_var.set(selected_transaction["furniture"])
         furniture_code_var.set(furniturecodes[furniturenames.index(selected_transaction["furniture"])])
-        stock_var.set(persediaan[furniture_code_var.get()])
+        price_var.set(harga[furniture_code_var.get()])
         price_var.set(selected_transaction["price"])
 
     # Button to load data of selected transaction
@@ -749,8 +749,7 @@ def edit_transaction():
             index = int(selected_transaction_var.get().split(".")[0]) - 1
             edited_furniture_name = furniture_name_var.get()
             edited_code = furniture_code_var.get()
-            edited_stock = int(stock_var.get())  # Ensure stock is an integer
-            edited_price = price_var.get()
+            edited_price = int(price_var.get())  
 
             # Update the transaction data
             transactions[index]["furniture"] = edited_furniture_name
@@ -759,7 +758,7 @@ def edit_transaction():
             # Update furniture database as well
             if edited_code in furniturecodes:
                 furniturenames[furniturecodes.index(edited_code)] = edited_furniture_name
-                persediaan[edited_code] = edited_stock
+                harga[edited_code] = edited_price
             else:
                 messagebox.showerror("Error", "Invalid furniture code.")
 
@@ -866,7 +865,7 @@ c.grid_columnconfigure(0, weight=1)
 c.grid_rowconfigure(5, weight=1)
 
 # Set event bindings
-lbox.bind('<<ListboxSelect>>', showPersediaan)
+lbox.bind('<<ListboxSelect>>', showPrice)
 lbox.bind('<Double-1>', sendtocart)
 root.bind('<Return>', sendtocart)
 
