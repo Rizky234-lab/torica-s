@@ -10,6 +10,7 @@ root.title("Torica Furniture Store")
 # Flags
 logged_in = True
 
+
 # Initialize furniture "databases"
 furniturecodes = ['1', '2', '3', '4', '5']
 furniturenames = ['Sofa', 'Lemari', 'Kursi', 'Meja', 'Lampu']
@@ -151,6 +152,20 @@ def open_transactions():
      # Insert all transactions into the Treeview
     for trans in transactions:
         tree.insert("", "end", values=(trans["timestamp"], trans["furniture"], trans["color"], trans["size"], trans["price"]))
+    # Function to calculate total price
+    
+
+    def calculate_total_price():
+        total = sum(
+            int(trans["price"].replace("Rp. ", "").replace(",", ""))
+            for trans in transactions
+        )
+        messagebox.showinfo("Total Price", f"The total price is: Rp. {total:,.0f}")
+
+    # Add a button to calculate the total price
+    total_price_button = Button(trans_window, text="Calculate Total Price", command=calculate_total_price)
+    total_price_button.pack(pady=10)
+
 
 def save_transactions_to_file():
     """Save all transactions to a text file."""
@@ -186,6 +201,7 @@ def furniture_actions():
     Button(furniture_action_window, text="Add Furniture", command=add_furniture).pack(pady=5)
     Button(furniture_action_window, text="Edit Furniture", command=edit_furniture).pack(pady=5)
     Button(furniture_action_window, text="Delete Furniture", command=open_delete_furniture).pack(pady=5)
+  
 
 def view_furniture():
     """Open the furniture view window."""
