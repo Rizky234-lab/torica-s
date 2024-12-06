@@ -10,7 +10,6 @@ root.title("Torica Furniture Store")
 # Flags
 logged_in = True
 
-
 # Initialize furniture "databases"
 furniturecodes = ['1', '2', '3', '4', '5']
 furniturenames = ['Sofa', 'Lemari', 'Kursi', 'Meja', 'Lampu']
