@@ -10,13 +10,11 @@ root.title("Torica Furniture Store")
 # Flags
 logged_in = True
 
-
 # Initialize furniture "databases"
 furniturecodes = ['1', '2', '3', '4', '5']
 furniturenames = ['Sofa', 'Lemari', 'Kursi', 'Meja', 'Lampu']
 cnames = StringVar(value=furniturenames)
 harga = {'1': 500000, '2': 750000, '3': 250000, '4': 600000, '5': 150000}
-
 
 # Color dictionary for furniture colors
 colornames = ['Merah', 'Biru','Kuning','Hijau']
@@ -103,7 +101,6 @@ def sendtocart(*args):
         color = selected_color.get()
         size = selected_size.get()  # Get selected size
         
-        
         if harga[code] > 0 and color and size:
             price = calculate_price(code, size)  # Calculate price based on furniture code and size
             timestamp = datetime.now().strftime("%Y-%m-%d")
@@ -114,7 +111,6 @@ def sendtocart(*args):
                 "color": colornames[color.index(color)],
                 "size": size.capitalize(),
                 "price": f"Rp. {price:,.0f}"
-
             }
             transactions.append(transaction)
             sentmsg.set(f"Transaksi anda: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) seharga {transaction['price']}")
@@ -124,6 +120,18 @@ def sendtocart(*args):
                 sentmsg.set(f"Maaf, stok {name} sudah habis!")
             else:
                 sentmsg.set("Tolong pilih warna dan ukuran.")
+
+def calculate_total_price():
+    """Calculate the total price of all transactions."""
+    if not transactions:
+            messagebox.showinfo("Total Price", "No transactions available.")
+            return
+
+    total = sum(
+        int(trans["price"].replace("Rp. ", "").replace(",", ""))
+        for trans in transactions
+    )
+    messagebox.showinfo("Total Price", f"The total price is: Rp. {total:,.0f}")
 
 def open_transactions():
     """Open a new window to display all transactions."""
@@ -137,6 +145,10 @@ def open_transactions():
 
     # Define Treeview columns
     columns = ("timestamp", "furniture", "color", "size", "price")
+
+    # Create main frame with treeview
+    main_frame = Frame(trans_window)
+    main_frame.pack(expand=True, fill=BOTH, padx=10, pady=10)
 
     # Create Treeview with columns for each transaction detail
     tree = ttk.Treeview(trans_window, columns=columns, show="headings", height=10)
@@ -152,20 +164,54 @@ def open_transactions():
      # Insert all transactions into the Treeview
     for trans in transactions:
         tree.insert("", "end", values=(trans["timestamp"], trans["furniture"], trans["color"], trans["size"], trans["price"]))
-    # Function to calculate total price
-    
 
-    def calculate_total_price():
-        total = sum(
-            int(trans["price"].replace("Rp. ", "").replace(",", ""))
-            for trans in transactions
-        )
-        messagebox.showinfo("Total Price", f"The total price is: Rp. {total:,.0f}")
+    # Frame for buttons
+    button_frame = Frame(main_frame)
+    button_frame.pack(fill=X, pady=10)
 
-    # Add a button to calculate the total price
-    total_price_button = Button(trans_window, text="Calculate Total Price", command=calculate_total_price)
-    total_price_button.pack(pady=10)
+    # Add a button to calculate total price
+    Button(button_frame, text="Calculate Total Price", command=calculate_total_price).pack(side=LEFT, padx=5)
 
+    # Function to filter and show furniture quantities
+    def show_furniture_quantities():
+        # Create a new window for furniture quantities
+        qty_window = Toplevel(trans_window)
+        qty_window.title("Furniture Quantities")
+        qty_window.geometry("400x300")
+
+        # Calculate furniture quantities
+        furniture_qty = {}
+        for trans in transactions:
+            furniture_name = trans['furniture']
+            if furniture_name in furniture_qty:
+                furniture_qty[furniture_name]['count'] += 1
+                # Track dates for each furniture
+                if trans['timestamp'] not in furniture_qty[furniture_name]['dates']:
+                    furniture_qty[furniture_name]['dates'].append(trans['timestamp'])
+            else:
+                furniture_qty[furniture_name] = {
+                    'count': 1,
+                    'dates': [trans['timestamp']]
+                }
+
+        # Create Treeview for furniture quantities
+        qty_columns = ("furniture", "quantity", "dates")
+        qty_tree = ttk.Treeview(qty_window, columns=qty_columns, show="headings")
+        qty_tree.heading("furniture", text="Furniture")
+        qty_tree.heading("quantity", text="Quantity")
+        qty_tree.heading("dates", text="Dates")
+        qty_tree.pack(expand=True, fill=BOTH, padx=10, pady=10)
+
+        # Insert furniture quantities
+        for furniture, data in furniture_qty.items():
+            qty_tree.insert("", "end", values=(
+                furniture, 
+                data['count'], 
+                ", ".join(sorted(set(data['dates'])))
+            ))
+
+    # Button to show furniture quantities
+    Button(button_frame, text="Furniture Quantities", command=show_furniture_quantities).pack(side=LEFT, padx=5)
 
 def save_transactions_to_file():
     """Save all transactions to a text file."""
@@ -174,7 +220,6 @@ def save_transactions_to_file():
         return
 
     file_name = "data_transaksi.txt"  
-
     try:
         with open(file_name, 'w') as file:
             for trans in transactions:
@@ -202,7 +247,6 @@ def furniture_actions():
     Button(furniture_action_window, text="Edit Furniture", command=edit_furniture).pack(pady=5)
     Button(furniture_action_window, text="Delete Furniture", command=open_delete_furniture).pack(pady=5)
   
-
 def view_furniture():
     """Open the furniture view window."""
     furniture_window = Toplevel(root)
@@ -335,7 +379,6 @@ def open_delete_furniture():
             "Delete Confirmation",
             f"Are you sure you want to delete {furniturenames[index]}?"
         )
-
         if confirm:
             furniturenames.pop(index)
             furniturecodes.pop(index)
@@ -429,7 +472,6 @@ def add_color():
 
     Button(add_color_window, text="Save", command=save_color).pack(pady=10)
 
-
 def edit_color():
     """Open the edit color window."""
     if not colornames:
@@ -452,7 +494,6 @@ def edit_color():
     Label(edit_window, text="New Color Name:").pack(pady=5)
     Entry(edit_window, textvariable=name_var).pack(pady=5)
 
-
     def save_color_changes():
         selected_option = selected_color_var.get()
         code = selected_option.split(".")[0]
@@ -472,7 +513,6 @@ def edit_color():
             messagebox.showerror("Error", "Please enter a valid name.")
 
     Button(edit_window, text="Save Changes", command=save_color_changes).pack(pady=10)
-
 
 def open_delete_color():
     """Open the delete color window."""
@@ -666,9 +706,7 @@ def open_delete_size():
         if confirm:
             del sizecodes[index]
             del sizenames[index]
-
             save_size_data()
-
             with open("data_ukuran.txt", "w") as file:
                 for code, name in zip(sizecodes, sizenames):
                     file.write(f"{code}:{name}\n")
@@ -827,7 +865,6 @@ def delete_transaction():
             delete_window.destroy()  # Tutup dialog setelah transaksi dihapus
 
     Button(delete_window, text="Delete Transaction", command=confirm_delete).pack(pady=20)
-
 
 # Create and grid the outer content frame
 c = ttk.Frame(main_frame, padding=(5, 5, 12, 0))
