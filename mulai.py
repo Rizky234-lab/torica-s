@@ -1,7 +1,9 @@
 from tkinter import *
 from tkinter import Tk, Button, Toplevel, messagebox, StringVar, Label, Entry, OptionMenu, ttk, OptionMenu,filedialog, BOTH
-from datetime import datetime  # For transaction timestamps
+from datetime import date  # For transaction timestamps
 from PIL import Image, ImageTk
+from tkcalendar import Calendar
+import shutil
 
 # Main application window
 root = Tk()
@@ -92,6 +94,80 @@ def calculate_price(furniture_code, size):
     # Calculate final price
     return base_price + size_increase.get(size, 0)
 
+def open_calendar():
+            """Open a calendar window for date selection."""
+cal_window = Toplevel(root)
+cal_window.title("Calendar")
+cal_window.geometry("400x400")
+    
+        # Create calendar widget
+today = date.today()
+cal = Calendar(cal_window, selectmode='day', 
+                  year=today.year, 
+                  month=today.month,
+                  day=today.day)
+cal.pack(pady=20, expand=True, fill='both')
+    
+    # Function to handle date selection
+def get_selected_date():
+    selected_date = cal.get_date()
+        # Filter transactions for the selected date
+    filtered_transactions = [
+            t for t in transactions 
+            if t['timestamp'].startswith(selected_date)
+        ]
+        
+        # Show transactions for selected date
+    if filtered_transactions:
+            trans_window = Toplevel(cal_window)
+            trans_window.title(f"Transactions for {selected_date}")
+            trans_window.geometry("700x300")
+            
+            # Create Treeview
+            columns = ("timestamp", "details")
+            tree = ttk.Treeview(trans_window, columns=columns, show="headings", height=10)
+            tree.pack(expand=True, fill=BOTH, padx=10, pady=10)
+            
+            # Define headings
+            tree.heading("timestamp", text="Timestamp")
+            tree.heading("details", text="Transaction details")
+            
+            # Insert filtered transactions
+            for trans in filtered_transactions:
+                tree.insert("", "end", values=(
+                    trans["timestamp"],
+                    f"Transaction details"
+                ))
+                  
+    else:
+            messagebox.showinfo("No Transactions", 
+                              f"No transactions found for {selected_date}")
+    
+    # Add button to view transactions for selected date
+    ttk.Button(cal_window, 
+               text="View Transactions for Selected Date",
+               command=get_selected_date).pack(pady=10)
+
+# --- Main Menu Setup ---
+def setup_main_menu():
+    # Furniture List
+   
+    # Calendar
+    Label(main_frame, text="Transaction Calendar", bg="white", font=("Arial", 12)).grid(row=0, column=3, pady=10, padx=10)
+    today = date.today()
+    cal = Calendar(main_frame, selectmode='day', 
+                   year=today.year, 
+                   month=today.month,
+                   day=today.day,
+                   width=30, height=10)
+    cal.grid(row=1, column=3, rowspan=5, padx=10, pady=10)
+
+    # Transactions Button
+    Button(main_frame, text="View Transactions", command=lambda: open_calendar()).grid(row=6, column=3, pady=10)
+
+# Run setup
+setup_main_menu()
+
 def sendtocart(*args):
     idxs = lbox.curselection()
     if len(idxs) == 1:
@@ -104,7 +180,7 @@ def sendtocart(*args):
         
         if harga[code] > 0 and color and size:
             price = calculate_price(code, size)  # Calculate price based on furniture code and size
-            timestamp = datetime.now().strftime("%Y-%m-%d")
+            timestamp = date.now().strftime("%Y-%m-%d")
             
             transaction = {
                 "timestamp": timestamp,
@@ -121,6 +197,16 @@ def sendtocart(*args):
                 sentmsg.set(f"Maaf, stok {name} sudah habis!")
             else:
                 sentmsg.set("Tolong pilih warna dan ukuran.")
+
+
+# Initial frame
+for frame in (login_frame, welcome_frame, main_frame, furniture_management_frame, color_management_frame, size_management_frame):
+    frame.grid(row=0, column=0, sticky="nsew")
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_columnconfigure(0, weight=1)
+
+# Start with login frame
+show_frame(login_frame)
 
 def calculate_total_price():
     """Calculate the total price of all transactions."""
@@ -914,6 +1000,7 @@ def open_image_editor():
         file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg *.jpeg *.png *.gif")])
         if file_path:
             editor_state['image'] = Image.open(file_path)
+            shutil.copy2(file_path, f".\simpan\\gambar.jpeg")
             display_image(editor_state['image'], editor_state['original_image_label'])
 
     def rotate_image(editor_state):
@@ -1024,6 +1111,7 @@ file_menu = Menu(menubar, tearoff=0)
 file_menu.add_command(label="Main Menu", command=open_main_menu)
 file_menu.add_command(label="Open Transaction", command=open_transactions)
 file_menu.add_command(label="Save Transactions", command=save_transactions_to_file)  
+file_menu.add_command(label="Open Calendar", command=open_calendar)
 file_menu.add_command(label="Open Image Editor", command=open_image_editor)
 file_menu.add_separator()
 file_menu.add_command(label="Exit", command=exit_app)
