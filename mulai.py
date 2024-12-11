@@ -1,6 +1,7 @@
 from tkinter import *
-from tkinter import Tk, Button, Toplevel, messagebox, StringVar, Label, Entry, OptionMenu, ttk, OptionMenu, BOTH
+from tkinter import Tk, Button, Toplevel, messagebox, StringVar, Label, Entry, OptionMenu, ttk, OptionMenu,filedialog, BOTH
 from datetime import datetime  # For transaction timestamps
+from PIL import Image, ImageTk
 
 # Main application window
 root = Tk()
@@ -866,6 +867,96 @@ def delete_transaction():
 
     Button(delete_window, text="Delete Transaction", command=confirm_delete).pack(pady=20)
 
+# Function to open the Image Editor
+def open_image_editor():
+    def create_root():
+        editor_root = Toplevel(root)  # Open in a new window
+        editor_root.title("Image Editor")
+        editor_root.maxsize(900, 600)
+        editor_root.config(bg="skyblue")
+        return editor_root
+
+    def create_frames(editor_root):
+        left_frame = Frame(editor_root, width=200, height=400, bg='white')
+        left_frame.grid(row=0, column=0, padx=10, pady=5)
+
+        right_frame = Frame(editor_root, width=650, height=400, bg='white')
+        right_frame.grid(row=0, column=1, padx=10, pady=5)
+
+        return left_frame, right_frame
+
+    def create_left_frame_content(left_frame):
+        Label(left_frame, text="Original Image").grid(row=0, column=0, padx=5, pady=5)
+        original_image_label = Label(left_frame)
+        original_image_label.grid(row=1, column=0, padx=5, pady=5)
+        return original_image_label
+
+    def create_toolbar(left_frame, editor_state):
+        tool_bar = Frame(left_frame, width=180, height=185)
+        tool_bar.grid(row=2, column=0, padx=5, pady=5)
+
+        Button(tool_bar, text="Select Image", command=lambda: load_image(editor_state)).grid(row=1, column=0, padx=5, pady=5)
+        Button(tool_bar, text="Rotate", command=lambda: rotate_image(editor_state)).grid(row=2, column=0, padx=5, pady=5)
+        Button(tool_bar, text="Flip", command=lambda: flip_image(editor_state)).grid(row=3, column=0, padx=5, pady=5)
+
+    def create_right_frame_content(right_frame):
+        edited_image_label = Label(right_frame)
+        edited_image_label.grid(row=0, column=0, padx=5, pady=5)
+        return edited_image_label
+
+    def display_image(img, label):
+        img.thumbnail((300, 300))  # Resize image to fit the label
+        img_tk = ImageTk.PhotoImage(img)
+        label.config(image=img_tk)
+        label.image = img_tk  # Keep a reference to avoid garbage collection
+
+    def load_image(editor_state):
+        file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg *.jpeg *.png *.gif")])
+        if file_path:
+            editor_state['image'] = Image.open(file_path)
+            display_image(editor_state['image'], editor_state['original_image_label'])
+
+    def rotate_image(editor_state):
+        if editor_state['image']:
+            if 'current_angle' not in editor_state:
+                editor_state['current_angle'] = 0  # Initialize rotation angle
+        
+            editor_state['current_angle'] = (editor_state['current_angle'] + 90) % 360  # Increment angle, reset after 360
+            editor_state['edited_image'] = editor_state['image'].rotate(editor_state['current_angle'], expand=True)
+            display_image(editor_state['edited_image'], editor_state['edited_image_label'])
+        else:
+            messagebox.showwarning("Warning", "Please load an image first.")
+
+    def flip_image(editor_state):
+        if editor_state['image']:
+            editor_state['edited_image'] = editor_state['image'].transpose(Image.FLIP_LEFT_RIGHT)
+            display_image(editor_state['edited_image'], editor_state['edited_image_label'])
+        else:
+            messagebox.showwarning("Warning", "Please load an image first.")
+
+    # Main Image Editor Function
+    editor_root = create_root()
+
+    # Create frames
+    left_frame, right_frame = create_frames(editor_root)
+
+    # Create left frame content
+    original_image_label = create_left_frame_content(left_frame)
+
+    # Create right frame content
+    edited_image_label = create_right_frame_content(right_frame)
+
+    # Define application state
+    editor_state = {
+        'image': None,
+        'edited_image': None,
+        'original_image_label': original_image_label,
+        'edited_image_label': edited_image_label
+    }
+
+    # Create toolbar
+    create_toolbar(left_frame, editor_state)
+
 # Create and grid the outer content frame
 c = ttk.Frame(main_frame, padding=(5, 5, 12, 0))
 c.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -932,7 +1023,8 @@ menubar = Menu(root)
 file_menu = Menu(menubar, tearoff=0)
 file_menu.add_command(label="Main Menu", command=open_main_menu)
 file_menu.add_command(label="Open Transaction", command=open_transactions)
-file_menu.add_command(label="Save Transactions", command=save_transactions_to_file)  # Added this line
+file_menu.add_command(label="Save Transactions", command=save_transactions_to_file)  
+file_menu.add_command(label="Open Image Editor", command=open_image_editor)
 file_menu.add_separator()
 file_menu.add_command(label="Exit", command=exit_app)
 menubar.add_cascade(label="File", menu=file_menu)
