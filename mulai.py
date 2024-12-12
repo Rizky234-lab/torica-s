@@ -4,6 +4,8 @@ from datetime import date  # For transaction timestamps
 from PIL import Image, ImageTk
 from tkcalendar import DateEntry
 import shutil
+from datetime import date, datetime
+
 
 # Main application window
 root = Tk()
@@ -131,22 +133,19 @@ def get_selected_date():
     
 # --- Main Menu Setup ---
 def setup_main_menu():
-    # Calendar
-    Label(main_frame, text="Transaction Calendar", bg="white", font=("Arial", 12)).grid(row=0, column=3, pady=10, padx=10)
-    global cal
+    # Transaction Date
+    Label(main_frame, text="Transaction Date:", bg="white").grid(row=0, column=3, pady=5, padx=5)
+    global transaction_date
     today = date.today()
-    cal = DateEntry(main_frame, selectmode='day', 
-                   year=today.year, 
-                   month=today.month,
-                   day=today.day,
-                   width=30, height=10)
-    cal.grid(row=1, column=3, rowspan=5, padx=10, pady=10)
+    transaction_date = DateEntry(main_frame, selectmode='day', 
+                               year=today.year, 
+                               month=today.month,
+                               day=today.day,
+                               width=20)
+    transaction_date.grid(row=1, column=3, pady=5, padx=5)
 
-    # Transactions Button
-    Button(main_frame, text="View Transactions", command=get_selected_date()).grid(row=6, column=3, pady=10)
-
-# Run setup
 setup_main_menu()
+
 
 def sendtocart(*args):
     idxs = lbox.curselection()
@@ -156,25 +155,30 @@ def sendtocart(*args):
         name = furniturenames[idx]
         code = furniturecodes[idx]
         color = selected_color.get()
-        size = selected_size.get()  # Get selected size
+        size = selected_size.get()
         
         if harga[code] > 0 and color and size:
-            price = calculate_price(code, size)  # Calculate price based on furniture code and size
-            timestamp = DateEntry(main_frame, width=12, background='white',
-                                       foreground='grey', borderwidth=2, date_pattern='yyyy-mm-dd')
+            price = calculate_price(code, size)
+            
+            # Get the selected date from the DateEntry widget
+            selected_date = transaction_date.get_date()
+            timestamp = selected_date.strftime('%Y-%m-%d')
             
             transaction = {
-                "timestamp": timestamp.get_date(),
+                "timestamp": timestamp,
                 "furniture": name,
                 "color": colornames[color.index(color)],
                 "size": size.capitalize(),
                 "price": f"Rp. {price:,.0f}"
             }
-            transactions.append(transaction)
+            
+            # Save transaction to file
+            save_transaction_to_file(transaction)
+            
             sentmsg.set(f"Transaksi anda: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) seharga {transaction['price']}")
             statusmsg.set(f"Persediaan {name} ({code}) {harga[code]:,.0f}")
         else:
-            if harga.get[code] <= 0:
+            if harga[code] <= 0:
                 sentmsg.set(f"Maaf, stok {name} sudah habis!")
             else:
                 sentmsg.set("Tolong pilih warna dan ukuran.")
@@ -201,25 +205,49 @@ def calculate_total_price():
     messagebox.showinfo("Total Price", f"The total price is: Rp. {total:,.0f}")
 
 def open_transactions():
-    """Open a new window to display all transactions."""
+    """Open a new window to display transactions from file with date filtering."""
+    # Read transactions from file
+    transactions = read_transactions_from_file()
+    
     if not transactions:
         messagebox.showinfo("Transactions", "No transactions available.")
         return
 
     trans_window = Toplevel(root)
     trans_window.title("All Transactions")
-    trans_window.geometry("700x300")
+    trans_window.geometry("800x500")
+
+    # Create main frame
+    main_frame = Frame(trans_window)
+    main_frame.pack(expand=True, fill=BOTH, padx=10, pady=10)
+
+    # Create filter frame
+    filter_frame = Frame(main_frame)
+    filter_frame.pack(fill=X, pady=5)
+
+    # Add date range filters
+    Label(filter_frame, text="Start Date:").pack(side=LEFT, padx=5)
+    start_cal = DateEntry(filter_frame, width=12)
+    start_cal.pack(side=LEFT, padx=5)
+
+    Label(filter_frame, text="End Date:").pack(side=LEFT, padx=5)
+    end_cal = DateEntry(filter_frame, width=12)
+    end_cal.pack(side=LEFT, padx=5)
 
     # Define Treeview columns
     columns = ("timestamp", "furniture", "color", "size", "price")
 
-    # Create main frame with treeview
-    main_frame = Frame(trans_window)
-    main_frame.pack(expand=True, fill=BOTH, padx=10, pady=10)
+    # Create Treeview with scrollbar
+    tree_frame = Frame(main_frame)
+    tree_frame.pack(expand=True, fill=BOTH)
 
-    # Create Treeview with columns for each transaction detail
-    tree = ttk.Treeview(trans_window, columns=columns, show="headings", height=10)
-    tree.pack(expand=True, fill=BOTH, padx=10, pady=10)
+    tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=10)
+    tree.pack(side=LEFT, expand=True, fill=BOTH)
+
+    # Add scrollbar
+    scrollbar = ttk.Scrollbar(tree_frame, orient=VERTICAL, command=tree.yview)
+    scrollbar.pack(side=RIGHT, fill=Y)
+    tree.configure(yscrollcommand=scrollbar.set)
 
     # Define headings for each column
     tree.heading("timestamp", text="Timestamp")
@@ -228,89 +256,132 @@ def open_transactions():
     tree.heading("size", text="Size")
     tree.heading("price", text="Price")
 
-     # Insert all transactions into the Treeview
-    for trans in transactions:
-        tree.insert("", "end", values=(trans["timestamp"], trans["furniture"], trans["color"], trans["size"], trans["price"]))
+    # Set column widths
+    tree.column("timestamp", width=150)
+    tree.column("furniture", width=150)
+    tree.column("color", width=100)
+    tree.column("size", width=100)
+    tree.column("price", width=100)
 
-    # Frame for buttons
-    button_frame = Frame(main_frame)
-    button_frame.pack(fill=X, pady=10)
-
-    # Add a button to calculate total price
-    Button(button_frame, text="Calculate Total Price", command=calculate_total_price).pack(side=LEFT, padx=5)
-
-# Function to filter and show furniture quantities
-def show_furniture_quantities():
-        # Create a new window for furniture quantities
-    qty_window = Toplevel(root)
-    qty_window.title("Furniture Quantities")
-    qty_window.geometry("400x300")
-
-        # Calculate furniture quantities
-    furniture_qty = {}
-    for trans in transactions:
-        furniture_name = trans['furniture']
-        if furniture_name in furniture_qty:
-                furniture_qty[furniture_name]['count'] += 1
-                # Convert date object to string if it's a date object
-                trans_date = str(trans['timestamp'])
-                if trans_date not in furniture_qty[furniture_name]['dates']:
-                    furniture_qty[furniture_name]['dates'].append(trans_date)
-        else:
-            furniture_qty[furniture_name] = {
-            'count': 1,
-            'dates': [str(trans['timestamp'])]  # Convert date object to string
-            }
+    def apply_filter():
+        # Clear existing items
+        for item in tree.get_children():
+            tree.delete(item)
+            
+        start_date = start_cal.get_date()
+        end_date = end_cal.get_date()
         
-    # Create Treeview for furniture quantities
-    qty_columns = ("furniture", "quantity", "dates")
-    qty_tree = ttk.Treeview(qty_window, columns=qty_columns, show="headings")
-    
-# Configure column widths
-    qty_tree.column("furniture", width=100)
-    qty_tree.column("quantity", width=70)
-    qty_tree.column("dates", width=200)
-    
-# Configure headings
-    qty_tree.heading("furniture", text="Furniture")
-    qty_tree.heading("quantity", text="Quantity")
-    qty_tree.heading("dates", text="Dates")
-    
-# Add scrollbar
-    scrollbar = ttk.Scrollbar(qty_window, orient="vertical", command=qty_tree.yview)
-    qty_tree.configure(yscrollcommand=scrollbar.set)
-    
-    # Pack widgets
-    qty_tree.pack(side="left", expand=True, fill=BOTH, padx=10, pady=10)
-    scrollbar.pack(side="right", fill="y", pady=10)
+        # Validate date range
+        if end_date < start_date:
+            messagebox.showerror("Invalid Date Range", "End date cannot be before start date")
+            return
+            
+        # Filter transactions
+        filtered_transactions = [
+            t for t in transactions 
+            if start_date <= datetime.strptime(t['timestamp'], '%Y-%m-%d').date() <= end_date
+        ]
+        
+        if not filtered_transactions:
+            messagebox.showinfo("No Transactions", 
+                              f"No transactions found between {start_date} and {end_date}")
+            return
+            
+        # Insert filtered transactions
+        for trans in filtered_transactions:
+            tree.insert("", "end", values=(
+                trans["timestamp"],
+                trans["furniture"],
+                trans["color"],
+                trans["size"],
+                trans["price"]
+            ))
 
-    # Insert furniture quantities
-    for furniture, data in furniture_qty.items():
-        qty_tree.insert("", "end", values=(
-        furniture, 
-        data['count'], 
-        ", ".join(sorted(set(data['dates'])))
-        ))
+        # Update total for filtered transactions
+        calculate_total_price(filtered_transactions)
 
-# Add this button to the main interface
-Button(main_frame, text="View Furniture Quantities", command=show_furniture_quantities).grid(row=7, column=3, pady=10)
-           
-def save_transactions_to_file():
-    """Save all transactions to a text file."""
-    if not transactions:
-        messagebox.showinfo("Save Transactions", "No transactions to save.")
-        return
+    def reset_filter():
+        # Clear existing items
+        for item in tree.get_children():
+            tree.delete(item)
+            
+        # Reset calendar widgets to today
+        today = date.today()
+        start_cal.set_date(today)
+        end_cal.set_date(today)
+        
+        # Show all transactions
+        for trans in transactions:
+            tree.insert("", "end", values=(
+                trans["timestamp"],
+                trans["furniture"],
+                trans["color"],
+                trans["size"],
+                trans["price"]
+            ))
+        
+        # Update total for all transactions
+        calculate_total_price(transactions)
 
-    file_name = "data_transaksi.txt"  
+    def calculate_total_price(trans_list):
+        total = 0
+        for trans in trans_list:
+            # Extract numeric value from price string (remove "Rp. " and ",")
+            price_str = trans["price"].replace("Rp. ", "").replace(",", "")
+            try:
+                total += float(price_str)
+            except ValueError:
+                continue
+        total_label.config(text=f"Total Price: Rp. {total:,.0f}")
+
+    # Add filter buttons
+    button_frame = Frame(main_frame)
+    button_frame.pack(fill=X, pady=5)
+
+    Button(button_frame, text="Apply Filter", command=apply_filter).pack(side=LEFT, padx=5)
+    Button(button_frame, text="Reset Filter", command=reset_filter).pack(side=LEFT, padx=5)
+
+    # Add total price label
+    total_label = Label(main_frame, text="Total Price: Rp. 0", font=("Arial", 10, "bold"))
+    total_label.pack(pady=10)
+
+    # Initially display all transactions
+    reset_filter()
+
+def save_transaction_to_file(transaction):
+    """Save a single transaction to data_transaksi.txt"""
     try:
-        with open(file_name, 'w') as file:
-            for trans in transactions:
-                line = f"{trans['timestamp']}, {trans['furniture']}, {trans['color']}, {trans['size']}, {trans['price']}\n"
-                file.write(line)
-
-        messagebox.showinfo("Save Successful", f"Transactions have been saved to {file_name}")
+        with open('data_transaksi.txt', 'a') as file:
+            # Convert transaction dict to a line of text
+            line = f"{transaction['timestamp']}|{transaction['furniture']}|{transaction['color']}|{transaction['size']}|{transaction['price']}\n"
+            file.write(line)
     except Exception as e:
-        messagebox.showerror("Error", f"Could not save transactions: {str(e)}")
+        messagebox.showerror("Error", f"Failed to save transaction: {str(e)}")
+
+def read_transactions_from_file():
+    """Read all transactions from data_transaksi.txt"""
+    transactions = []
+    try:
+        with open('data_transaksi.txt', 'r') as file:
+            for line in file:
+                # Split line into components
+                data = line.strip().split('|')
+                if len(data) == 5:  # Ensure we have all required fields
+                    transaction = {
+                        "timestamp": data[0],
+                        "furniture": data[1],
+                        "color": data[2],
+                        "size": data[3],
+                        "price": data[4]
+                    }
+                    transactions.append(transaction)
+    except FileNotFoundError:
+        # Create file if it doesn't exist
+        open('data_transaksi.txt', 'w').close()
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to read transactions: {str(e)}")
+    
+    return transactions
 
 def furniture_actions():
     """Provide a comprehensive furniture management dialog."""
@@ -1105,7 +1176,6 @@ menubar = Menu(root)
 file_menu = Menu(menubar, tearoff=0)
 file_menu.add_command(label="Main Menu", command=open_main_menu)
 file_menu.add_command(label="Open Transaction", command=open_transactions)
-file_menu.add_command(label="Save Transactions", command=save_transactions_to_file)  
 file_menu.add_command(label="Open Image Editor", command=open_image_editor)
 file_menu.add_separator()
 file_menu.add_command(label="Exit", command=exit_app)
