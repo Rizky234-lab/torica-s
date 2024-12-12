@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import Tk, Button, Toplevel, messagebox, StringVar, Label, Entry, OptionMenu, ttk, OptionMenu,filedialog, BOTH
 from datetime import date  # For transaction timestamps
 from PIL import Image, ImageTk
-from tkcalendar import Calendar
+from tkcalendar import DateEntry
 import shutil
 
 # Main application window
@@ -94,21 +94,7 @@ def calculate_price(furniture_code, size):
     # Calculate final price
     return base_price + size_increase.get(size, 0)
 
-def open_calendar():
-            """Open a calendar window for date selection."""
-cal_window = Toplevel(root)
-cal_window.title("Calendar")
-cal_window.geometry("400x400")
-    
-        # Create calendar widget
-today = date.today()
-cal = Calendar(cal_window, selectmode='day', 
-                  year=today.year, 
-                  month=today.month,
-                  day=today.day)
-cal.pack(pady=20, expand=True, fill='both')
-    
-    # Function to handle date selection
+# Function to handle date selection
 def get_selected_date():
     selected_date = cal.get_date()
         # Filter transactions for the selected date
@@ -119,7 +105,7 @@ def get_selected_date():
         
         # Show transactions for selected date
     if filtered_transactions:
-            trans_window = Toplevel(cal_window)
+            trans_window = Toplevel(root)
             trans_window.title(f"Transactions for {selected_date}")
             trans_window.geometry("700x300")
             
@@ -143,19 +129,13 @@ def get_selected_date():
             messagebox.showinfo("No Transactions", 
                               f"No transactions found for {selected_date}")
     
-    # Add button to view transactions for selected date
-    ttk.Button(cal_window, 
-               text="View Transactions for Selected Date",
-               command=get_selected_date).pack(pady=10)
-
 # --- Main Menu Setup ---
 def setup_main_menu():
-    # Furniture List
-   
     # Calendar
     Label(main_frame, text="Transaction Calendar", bg="white", font=("Arial", 12)).grid(row=0, column=3, pady=10, padx=10)
+    global cal
     today = date.today()
-    cal = Calendar(main_frame, selectmode='day', 
+    cal = DateEntry(main_frame, selectmode='day', 
                    year=today.year, 
                    month=today.month,
                    day=today.day,
@@ -163,7 +143,7 @@ def setup_main_menu():
     cal.grid(row=1, column=3, rowspan=5, padx=10, pady=10)
 
     # Transactions Button
-    Button(main_frame, text="View Transactions", command=lambda: open_calendar()).grid(row=6, column=3, pady=10)
+    Button(main_frame, text="View Transactions", command=get_selected_date()).grid(row=6, column=3, pady=10)
 
 # Run setup
 setup_main_menu()
@@ -180,10 +160,11 @@ def sendtocart(*args):
         
         if harga[code] > 0 and color and size:
             price = calculate_price(code, size)  # Calculate price based on furniture code and size
-            timestamp = date.now().strftime("%Y-%m-%d")
+            timestamp = DateEntry(main_frame, width=12, background='white',
+                                       foreground='grey', borderwidth=2, date_pattern='yyyy-mm-dd')
             
             transaction = {
-                "timestamp": timestamp,
+                "timestamp": timestamp.get_date(),
                 "furniture": name,
                 "color": colornames[color.index(color)],
                 "size": size.capitalize(),
@@ -204,7 +185,6 @@ for frame in (login_frame, welcome_frame, main_frame, furniture_management_frame
     frame.grid(row=0, column=0, sticky="nsew")
     root.grid_rowconfigure(0, weight=1)
     root.grid_columnconfigure(0, weight=1)
-
 # Start with login frame
 show_frame(login_frame)
 
@@ -259,47 +239,62 @@ def open_transactions():
     # Add a button to calculate total price
     Button(button_frame, text="Calculate Total Price", command=calculate_total_price).pack(side=LEFT, padx=5)
 
-    # Function to filter and show furniture quantities
-    def show_furniture_quantities():
+# Function to filter and show furniture quantities
+def show_furniture_quantities():
         # Create a new window for furniture quantities
-        qty_window = Toplevel(trans_window)
-        qty_window.title("Furniture Quantities")
-        qty_window.geometry("400x300")
+    qty_window = Toplevel(root)
+    qty_window.title("Furniture Quantities")
+    qty_window.geometry("400x300")
 
         # Calculate furniture quantities
-        furniture_qty = {}
-        for trans in transactions:
-            furniture_name = trans['furniture']
-            if furniture_name in furniture_qty:
+    furniture_qty = {}
+    for trans in transactions:
+        furniture_name = trans['furniture']
+        if furniture_name in furniture_qty:
                 furniture_qty[furniture_name]['count'] += 1
-                # Track dates for each furniture
-                if trans['timestamp'] not in furniture_qty[furniture_name]['dates']:
-                    furniture_qty[furniture_name]['dates'].append(trans['timestamp'])
-            else:
-                furniture_qty[furniture_name] = {
-                    'count': 1,
-                    'dates': [trans['timestamp']]
-                }
+                # Convert date object to string if it's a date object
+                trans_date = str(trans['timestamp'])
+                if trans_date not in furniture_qty[furniture_name]['dates']:
+                    furniture_qty[furniture_name]['dates'].append(trans_date)
+        else:
+            furniture_qty[furniture_name] = {
+            'count': 1,
+            'dates': [str(trans['timestamp'])]  # Convert date object to string
+            }
+        
+    # Create Treeview for furniture quantities
+    qty_columns = ("furniture", "quantity", "dates")
+    qty_tree = ttk.Treeview(qty_window, columns=qty_columns, show="headings")
+    
+# Configure column widths
+    qty_tree.column("furniture", width=100)
+    qty_tree.column("quantity", width=70)
+    qty_tree.column("dates", width=200)
+    
+# Configure headings
+    qty_tree.heading("furniture", text="Furniture")
+    qty_tree.heading("quantity", text="Quantity")
+    qty_tree.heading("dates", text="Dates")
+    
+# Add scrollbar
+    scrollbar = ttk.Scrollbar(qty_window, orient="vertical", command=qty_tree.yview)
+    qty_tree.configure(yscrollcommand=scrollbar.set)
+    
+    # Pack widgets
+    qty_tree.pack(side="left", expand=True, fill=BOTH, padx=10, pady=10)
+    scrollbar.pack(side="right", fill="y", pady=10)
 
-        # Create Treeview for furniture quantities
-        qty_columns = ("furniture", "quantity", "dates")
-        qty_tree = ttk.Treeview(qty_window, columns=qty_columns, show="headings")
-        qty_tree.heading("furniture", text="Furniture")
-        qty_tree.heading("quantity", text="Quantity")
-        qty_tree.heading("dates", text="Dates")
-        qty_tree.pack(expand=True, fill=BOTH, padx=10, pady=10)
+    # Insert furniture quantities
+    for furniture, data in furniture_qty.items():
+        qty_tree.insert("", "end", values=(
+        furniture, 
+        data['count'], 
+        ", ".join(sorted(set(data['dates'])))
+        ))
 
-        # Insert furniture quantities
-        for furniture, data in furniture_qty.items():
-            qty_tree.insert("", "end", values=(
-                furniture, 
-                data['count'], 
-                ", ".join(sorted(set(data['dates'])))
-            ))
-
-    # Button to show furniture quantities
-    Button(button_frame, text="Furniture Quantities", command=show_furniture_quantities).pack(side=LEFT, padx=5)
-
+# Add this button to the main interface
+Button(main_frame, text="View Furniture Quantities", command=show_furniture_quantities).grid(row=7, column=3, pady=10)
+           
 def save_transactions_to_file():
     """Save all transactions to a text file."""
     if not transactions:
@@ -1111,7 +1106,6 @@ file_menu = Menu(menubar, tearoff=0)
 file_menu.add_command(label="Main Menu", command=open_main_menu)
 file_menu.add_command(label="Open Transaction", command=open_transactions)
 file_menu.add_command(label="Save Transactions", command=save_transactions_to_file)  
-file_menu.add_command(label="Open Calendar", command=open_calendar)
 file_menu.add_command(label="Open Image Editor", command=open_image_editor)
 file_menu.add_separator()
 file_menu.add_command(label="Exit", command=exit_app)
