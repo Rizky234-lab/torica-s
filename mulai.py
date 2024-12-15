@@ -3,9 +3,12 @@ from tkinter import Tk, Button, Toplevel, messagebox, StringVar, Label, Entry, O
 from datetime import date  # For transaction timestamps
 from PIL import Image, ImageTk
 from tkcalendar import DateEntry
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import tkinter as tk
 import shutil
+import os
 from datetime import date, datetime
-
 
 # Main application window
 root = Tk()
@@ -345,8 +348,149 @@ def open_transactions():
     total_label = Label(main_frame, text="Total Price: Rp. 0", font=("Arial", 10, "bold"))
     total_label.pack(pady=10)
 
+    def add_transaction_graph():
+        """
+        Add a graphing section to the transactions window
+        """
+        # Create a graph frame
+        graph_frame = Frame(trans_window)
+        graph_frame.pack(expand=True, fill=BOTH, padx=10, pady=10)
+
+        # Graphing options frame
+        graph_options_frame = Frame(graph_frame)
+        graph_options_frame.pack(fill=X, pady=5)
+
+        # Graph type selection
+        graph_type_var = StringVar(value="Bar Chart")
+        graph_type_label = Label(graph_options_frame, text="Graph Type:")
+        graph_type_label.pack(side=LEFT, padx=5)
+
+        graph_type_dropdown = ttk.Combobox(
+            graph_options_frame, 
+            textvariable=graph_type_var, 
+            values=["Bar Chart", "Line Chart", "Pie Chart"],
+            state="readonly",
+            width=15
+        )
+        graph_type_dropdown.pack(side=LEFT, padx=5)
+
+        # Graph by selection
+        graph_by_var = StringVar(value="Price by Date")
+        graph_by_label = Label(graph_options_frame, text="Graph By:")
+        graph_by_label.pack(side=LEFT, padx=5)
+
+        graph_by_dropdown = ttk.Combobox(
+            graph_options_frame, 
+            textvariable=graph_by_var, 
+            values=["Price by Date", "Furniture Types", "Price Distribution"],
+            state="readonly",
+            width=15
+        )
+        graph_by_dropdown.pack(side=LEFT, padx=5)
+
+        # Matplotlib figure and canvas
+        fig, ax = plt.subplots(figsize=(10, 4), dpi=100)
+        canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(expand=True, fill=BOTH)
+
+        def generate_graph():
+            # Clear previous plot
+            ax.clear()
+
+            # Prepare data
+            graph_type = graph_type_var.get()
+            graph_by = graph_by_var.get()
+
+            # Convert transactions
+            for trans in transactions:
+                trans['price_numeric'] = float(trans['price'].replace("Rp. ", "").replace(",", ""))
+                trans['date'] = datetime.strptime(trans['timestamp'], '%Y-%m-%d')
+
+            if graph_by == "Price by Date":
+                # Group by date
+                date_prices = {}
+                for trans in transactions:
+                    date = trans['date'].date()
+                    if date not in date_prices:
+                        date_prices[date] = 0
+                    date_prices[date] += trans['price_numeric']
+                
+                dates = list(date_prices.keys())
+                prices = list(date_prices.values())
+
+                if graph_type == "Bar Chart":
+                    ax.bar(dates, prices, color='skyblue', edgecolor='navy')
+                    ax.set_title('Daily Total Sales')
+                    ax.set_xlabel('Date')
+                    ax.set_ylabel('Total Price (Rp)')
+                    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+                
+                elif graph_type == "Line Chart":
+                    ax.plot(dates, prices, marker='o', color='navy')
+                    ax.set_title('Daily Total Sales Trend')
+                    ax.set_xlabel('Date')
+                    ax.set_ylabel('Total Price (Rp)')
+                    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+                
+                else:  # Pie Chart
+                    ax.pie(prices, labels=[str(date) for date in dates], autopct='%1.1f%%')
+                    ax.set_title('Sales Distribution by Date')
+
+            elif graph_by == "Furniture Types":
+                # Group by furniture type
+                furniture_sales = {}
+                for trans in transactions:
+                    furniture = trans['furniture']
+                    if furniture not in furniture_sales:
+                        furniture_sales[furniture] = 0
+                    furniture_sales[furniture] += trans['price_numeric']
+                
+                furniture_types = list(furniture_sales.keys())
+                sales = list(furniture_sales.values())
+
+                if graph_type == "Bar Chart":
+                    ax.bar(furniture_types, sales, color='lightgreen', edgecolor='darkgreen')
+                    ax.set_title('Sales by Furniture Type')
+                    ax.set_xlabel('Furniture Type')
+                    ax.set_ylabel('Total Sales (Rp)')
+                    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+                
+                elif graph_type == "Pie Chart":
+                    ax.pie(sales, labels=furniture_types, autopct='%1.1f%%')
+                    ax.set_title('Sales Distribution by Furniture')
+
+            elif graph_by == "Price Distribution":
+                prices = [trans['price_numeric'] for trans in transactions]
+                
+                if graph_type == "Bar Chart":
+                    ax.hist(prices, bins=10, color='salmon', edgecolor='red')
+                    ax.set_title('Price Distribution')
+                    ax.set_xlabel('Price (Rp)')
+                    ax.set_ylabel('Frequency')
+                
+                elif graph_type == "Line Chart":
+                    sorted_prices = sorted(prices)
+                    ax.plot(range(len(sorted_prices)), sorted_prices, marker='o', color='red')
+                    ax.set_title('Price Trend')
+                    ax.set_xlabel('Transaction Index')
+                    ax.set_ylabel('Price (Rp)')
+
+            plt.tight_layout()
+            canvas.draw()
+
+        # Add generate graph button
+        generate_button = Button(graph_options_frame, text="Generate Graph", command=generate_graph)
+        generate_button.pack(side=LEFT, padx=5)
+
+        # Initial graph generation
+        generate_graph()
+
     # Initially display all transactions
     reset_filter()
+
+    # Add graph to transactions window
+    add_transaction_graph()
 
 def save_transaction_to_file(transaction):
     """Save a single transaction to data_transaksi.txt"""
@@ -1025,7 +1169,7 @@ def open_image_editor():
         editor_root = Toplevel(root)  # Open in a new window
         editor_root.title("Image Editor")
         editor_root.maxsize(900, 600)
-        editor_root.config(bg="skyblue")
+        editor_root.config(bg="blue")
         return editor_root
 
     def create_frames(editor_root):
@@ -1047,10 +1191,8 @@ def open_image_editor():
         tool_bar = Frame(left_frame, width=180, height=185)
         tool_bar.grid(row=2, column=0, padx=5, pady=5)
 
-        Button(tool_bar, text="Select Image", command=lambda: load_image(editor_state)).grid(row=1, column=0, padx=5, pady=5)
-        Button(tool_bar, text="Rotate", command=lambda: rotate_image(editor_state)).grid(row=2, column=0, padx=5, pady=5)
-        Button(tool_bar, text="Flip", command=lambda: flip_image(editor_state)).grid(row=3, column=0, padx=5, pady=5)
-
+        Button(tool_bar, text="Select Image", command=lambda: load_image(editor_state)).grid(row=1, column=0, padx=5, pady=10)
+        
     def create_right_frame_content(right_frame):
         edited_image_label = Label(right_frame)
         edited_image_label.grid(row=0, column=0, padx=5, pady=5)
@@ -1063,29 +1205,44 @@ def open_image_editor():
         label.image = img_tk  # Keep a reference to avoid garbage collection
 
     def load_image(editor_state):
+    # Tambahkan variabel untuk melacak nomor urut
+        if 'image_counter' not in editor_state:
+            editor_state['image_counter'] = 1
+
         file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg *.jpeg *.png *.gif")])
         if file_path:
-            editor_state['image'] = Image.open(file_path)
-            shutil.copy2(file_path, f".\simpan\\gambar.jpeg")
-            display_image(editor_state['image'], editor_state['original_image_label'])
-
-    def rotate_image(editor_state):
-        if editor_state['image']:
-            if 'current_angle' not in editor_state:
-                editor_state['current_angle'] = 0  # Initialize rotation angle
+        # Buat direktori 'simpan' jika belum ada
+            os.makedirs('.\\simpan', exist_ok=True)
         
-            editor_state['current_angle'] = (editor_state['current_angle'] + 90) % 360  # Increment angle, reset after 360
-            editor_state['edited_image'] = editor_state['image'].rotate(editor_state['current_angle'], expand=True)
-            display_image(editor_state['edited_image'], editor_state['edited_image_label'])
-        else:
-            messagebox.showwarning("Warning", "Please load an image first.")
+        # Buat nama file dengan nomor urut
+            save_path = f".\\simpan\\gambar_{editor_state['image_counter']}.jpeg"
+        
+            editor_state['image'] = Image.open(file_path)
+            shutil.copy2(file_path, save_path)
+            display_image(editor_state['image'], editor_state['original_image_label'])
+        
+        # Naikkan counter untuk file berikutnya
+            editor_state['image_counter'] += 1
 
-    def flip_image(editor_state):
-        if editor_state['image']:
-            editor_state['edited_image'] = editor_state['image'].transpose(Image.FLIP_LEFT_RIGHT)
-            display_image(editor_state['edited_image'], editor_state['edited_image_label'])
-        else:
+    def save_addtional_photo(editor_state):
+        if 'image' not in editor_state:
             messagebox.showwarning("Warning", "Please load an image first.")
+            return
+    
+    file_path= filedialog.asksaveasfilename(
+        defaultextension=".jpeg",
+        filetypes=[("JPEG files", ".jpeg"), ("PNG files", ".png"), ("All files", ".")],
+        initialdir=".\\simpan"
+    )
+
+    if file_path:
+        try:
+            os.makedirs(os.path.dirname(file_path),exist_ok=True)
+
+            editor_state['image'].save(file_path)
+            messagebox.showinfo("Success", f"Image saved to {file_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save image: {str(e)}")
 
     # Main Image Editor Function
     editor_root = create_root()
