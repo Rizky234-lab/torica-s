@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import Tk, Button, Toplevel, messagebox, StringVar, Label, Entry, OptionMenu, ttk, OptionMenu,filedialog, BOTH
-from datetime import date  # For transaction timestamps
+from datetime import date  
 from PIL import Image, ImageTk
 from tkcalendar import DateEntry
 import matplotlib.pyplot as plt
@@ -128,8 +128,7 @@ def get_selected_date():
                 tree.insert("", "end", values=(
                     trans["timestamp"],
                     f"Transaction details"
-                ))
-                  
+                ))   
     else:
             messagebox.showinfo("No Transactions", 
                               f"No transactions found for {selected_date}")
@@ -148,7 +147,6 @@ def setup_main_menu():
     transaction_date.grid(row=1, column=3, pady=5, padx=5)
 
 setup_main_menu()
-
 
 def sendtocart(*args):
     idxs = lbox.curselection()
@@ -185,7 +183,6 @@ def sendtocart(*args):
                 sentmsg.set(f"Maaf, stok {name} sudah habis!")
             else:
                 sentmsg.set("Tolong pilih warna dan ukuran.")
-
 
 # Initial frame
 for frame in (login_frame, welcome_frame, main_frame, furniture_management_frame, color_management_frame, size_management_frame):
@@ -368,7 +365,7 @@ def open_transactions():
         graph_type_dropdown = ttk.Combobox(
             graph_options_frame, 
             textvariable=graph_type_var, 
-            values=["Bar Chart", "Line Chart", "Pie Chart"],
+            values=["Bar Chart"],
             state="readonly",
             width=15
         )
@@ -382,14 +379,14 @@ def open_transactions():
         graph_by_dropdown = ttk.Combobox(
             graph_options_frame, 
             textvariable=graph_by_var, 
-            values=["Price by Date", "Furniture Types", "Price Distribution"],
+            values=["Price by Date", "Furniture Types"],
             state="readonly",
             width=15
         )
         graph_by_dropdown.pack(side=LEFT, padx=5)
 
         # Matplotlib figure and canvas
-        fig, ax = plt.subplots(figsize=(10, 4), dpi=100)
+        fig, ax = plt.subplots(figsize=(10, 5), dpi=111)
         canvas = FigureCanvasTkAgg(fig, master=graph_frame)
         canvas_widget = canvas.get_tk_widget()
         canvas_widget.pack(expand=True, fill=BOTH)
@@ -420,22 +417,12 @@ def open_transactions():
                 prices = list(date_prices.values())
 
                 if graph_type == "Bar Chart":
-                    ax.bar(dates, prices, color='skyblue', edgecolor='navy')
-                    ax.set_title('Daily Total Sales')
+                    ax.bar(dates, prices, color='blue', edgecolor='navy')
+                    ax.set_title('Total Sales')
                     ax.set_xlabel('Date')
-                    ax.set_ylabel('Total Price (Rp)')
-                    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+                    ax.set_ylabel('Total Price')
+                    plt.setp(ax.get_xticklabels(), rotation=0, ha='right')
                 
-                elif graph_type == "Line Chart":
-                    ax.plot(dates, prices, marker='o', color='navy')
-                    ax.set_title('Daily Total Sales Trend')
-                    ax.set_xlabel('Date')
-                    ax.set_ylabel('Total Price (Rp)')
-                    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
-                
-                else:  # Pie Chart
-                    ax.pie(prices, labels=[str(date) for date in dates], autopct='%1.1f%%')
-                    ax.set_title('Sales Distribution by Date')
 
             elif graph_by == "Furniture Types":
                 # Group by furniture type
@@ -450,31 +437,11 @@ def open_transactions():
                 sales = list(furniture_sales.values())
 
                 if graph_type == "Bar Chart":
-                    ax.bar(furniture_types, sales, color='lightgreen', edgecolor='darkgreen')
+                    ax.bar(furniture_types, sales, color='blue', edgecolor='darkblue')
                     ax.set_title('Sales by Furniture Type')
                     ax.set_xlabel('Furniture Type')
-                    ax.set_ylabel('Total Sales (Rp)')
-                    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
-                
-                elif graph_type == "Pie Chart":
-                    ax.pie(sales, labels=furniture_types, autopct='%1.1f%%')
-                    ax.set_title('Sales Distribution by Furniture')
-
-            elif graph_by == "Price Distribution":
-                prices = [trans['price_numeric'] for trans in transactions]
-                
-                if graph_type == "Bar Chart":
-                    ax.hist(prices, bins=10, color='salmon', edgecolor='red')
-                    ax.set_title('Price Distribution')
-                    ax.set_xlabel('Price (Rp)')
-                    ax.set_ylabel('Frequency')
-                
-                elif graph_type == "Line Chart":
-                    sorted_prices = sorted(prices)
-                    ax.plot(range(len(sorted_prices)), sorted_prices, marker='o', color='red')
-                    ax.set_title('Price Trend')
-                    ax.set_xlabel('Transaction Index')
-                    ax.set_ylabel('Price (Rp)')
+                    ax.set_ylabel('Total Sales')
+                    plt.setp(ax.get_xticklabels(), rotation=0, ha='right')
 
             plt.tight_layout()
             canvas.draw()
@@ -1129,10 +1096,10 @@ def delete_transaction():
         messagebox.showinfo("Delete Transaction", "No transactions to delete.")
         return
 
-    # Membuat list pilihan transaksi berdasarkan deskripsi (nama furniture dan rincian lain)
+    # Create a list of transaction options based on description (furniture name and other details)
     transaction_options = [f"{i+1}. {t['furniture']} - {t['size']} - {t['color']} - {t['price']}" for i, t in enumerate(transactions)]
     
-    # Membuka jendela dialog untuk memilih transaksi yang ingin dihapus
+    # Open a dialog window to select the transaction you want to delete
     delete_window = Toplevel(root)
     delete_window.title("Delete Transaction")
     delete_window.geometry("400x200")
@@ -1140,13 +1107,12 @@ def delete_transaction():
     Label(delete_window, text="Pilih transaksi yang ingin dihapus:").pack(pady=10)
     
     selected_transaction_var = StringVar()
-    selected_transaction_var.set(transaction_options[0])  # Default ke transaksi pertama
-
-    # Dropdown menu untuk memilih transaksi
+    selected_transaction_var.set(transaction_options[0])  # Back to the first transaction
+    # Dropdown menu to select the transaction
     transaction_menu = OptionMenu(delete_window, selected_transaction_var, *transaction_options)
     transaction_menu.pack(pady=10)
 
-    # Fungsi untuk menghapus transaksi yang dipilih
+    # Function to delete the selected transaction
     def confirm_delete():
         selected_index = int(selected_transaction_var.get().split(".")[0]) - 1
         selected_transaction = transactions[selected_index]
@@ -1157,9 +1123,9 @@ def delete_transaction():
         )
 
         if confirm:
-            transactions.pop(selected_index)  # Hapus transaksi yang dipilih
+            transactions.pop(selected_index)  # Delete the selected transaction
             messagebox.showinfo("Delete Successful", "Transaksi berhasil dihapus.")
-            delete_window.destroy()  # Tutup dialog setelah transaksi dihapus
+            delete_window.destroy()  # Close the dialog after the transaction is deleted
 
     Button(delete_window, text="Delete Transaction", command=confirm_delete).pack(pady=20)
 
@@ -1173,10 +1139,10 @@ def open_image_editor():
         return editor_root
 
     def create_frames(editor_root):
-        left_frame = Frame(editor_root, width=200, height=400, bg='white')
+        left_frame = Frame(editor_root, width=500, height=700, bg='white')
         left_frame.grid(row=0, column=0, padx=10, pady=5)
 
-        right_frame = Frame(editor_root, width=650, height=400, bg='white')
+        right_frame = Frame(editor_root, width=650, height=500, bg='white')
         right_frame.grid(row=0, column=1, padx=10, pady=5)
 
         return left_frame, right_frame
@@ -1188,7 +1154,7 @@ def open_image_editor():
         return original_image_label
 
     def create_toolbar(left_frame, editor_state):
-        tool_bar = Frame(left_frame, width=180, height=185)
+        tool_bar = Frame(left_frame, width=380, height=385)
         tool_bar.grid(row=2, column=0, padx=5, pady=5)
 
         Button(tool_bar, text="Select Image", command=lambda: load_image(editor_state)).grid(row=1, column=0, padx=5, pady=10)
@@ -1205,23 +1171,23 @@ def open_image_editor():
         label.image = img_tk  # Keep a reference to avoid garbage collection
 
     def load_image(editor_state):
-    # Tambahkan variabel untuk melacak nomor urut
+    # Add variable to track sequence number
         if 'image_counter' not in editor_state:
             editor_state['image_counter'] = 1
 
         file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg *.jpeg *.png *.gif")])
         if file_path:
-        # Buat direktori 'simpan' jika belum ada
+        # Create a 'save' directory if it doesn't already exist
             os.makedirs('.\\simpan', exist_ok=True)
         
-        # Buat nama file dengan nomor urut
+        # Create file name with sequence number
             save_path = f".\\simpan\\gambar_{editor_state['image_counter']}.jpeg"
         
             editor_state['image'] = Image.open(file_path)
             shutil.copy2(file_path, save_path)
             display_image(editor_state['image'], editor_state['original_image_label'])
         
-        # Naikkan counter untuk file berikutnya
+        # Increase the next file's counter
             editor_state['image_counter'] += 1
 
     def save_addtional_photo(editor_state):
@@ -1263,7 +1229,6 @@ def open_image_editor():
         'original_image_label': original_image_label,
         'edited_image_label': edited_image_label
     }
-
     # Create toolbar
     create_toolbar(left_frame, editor_state)
 
