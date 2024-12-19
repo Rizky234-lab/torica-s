@@ -9,6 +9,7 @@ import tkinter as tk
 import shutil
 import os
 from datetime import date, datetime
+import pandas as pd
 
 # Main application window
 root = Tk()
@@ -128,7 +129,8 @@ def get_selected_date():
                 tree.insert("", "end", values=(
                     trans["timestamp"],
                     f"Transaction details"
-                ))   
+                ))
+                  
     else:
             messagebox.showinfo("No Transactions", 
                               f"No transactions found for {selected_date}")
@@ -176,13 +178,13 @@ def sendtocart(*args):
             # Save transaction to file
             save_transaction_to_file(transaction)
             
-            sentmsg.set(f"Transaksi anda: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) seharga {transaction['price']}")
+            sentmsg.set(f"Your transaction is: {transaction['furniture']} ({transaction['size']} - {transaction['color']}) {transaction['price']}")
             statusmsg.set(f"Persediaan {name} ({code}) {harga[code]:,.0f}")
         else:
             if harga[code] <= 0:
-                sentmsg.set(f"Maaf, stok {name} sudah habis!")
+                sentmsg.set(f"Sorry, stok {name} sudah habis!")
             else:
-                sentmsg.set("Tolong pilih warna dan ukuran.")
+                sentmsg.set("Please pick the color and size.")
 
 # Initial frame
 for frame in (login_frame, welcome_frame, main_frame, furniture_management_frame, color_management_frame, size_management_frame):
@@ -215,7 +217,7 @@ def open_transactions():
 
     trans_window = Toplevel(root)
     trans_window.title("All Transactions")
-    trans_window.geometry("800x500")
+    trans_window.geometry("800x600")  # Increased height for chart
 
     # Create main frame
     main_frame = Frame(trans_window)
@@ -299,6 +301,7 @@ def open_transactions():
 
         # Update total for filtered transactions
         calculate_total_price(filtered_transactions)
+        visualize_transactions(filtered_transactions)  # Update chart
 
     def reset_filter():
         # Clear existing items
@@ -322,6 +325,7 @@ def open_transactions():
         
         # Update total for all transactions
         calculate_total_price(transactions)
+        visualize_transactions(transactions)  # Update chart
 
     def calculate_total_price(trans_list):
         total = 0
@@ -345,119 +349,74 @@ def open_transactions():
     total_label = Label(main_frame, text="Total Price: Rp. 0", font=("Arial", 10, "bold"))
     total_label.pack(pady=10)
 
-    def add_transaction_graph():
+    # Create a frame for the chart
+    chart_frame = Frame(main_frame)
+    chart_frame.pack(expand=True, fill=BOTH)
+
+    def visualize_transactions(trans_list):
         """
-        Add a graphing section to the transactions window
+        Create a line chart visualization based on the provided transaction list.
         """
-        # Create a graph frame
-        graph_frame = Frame(trans_window)
-        graph_frame.pack(expand=True, fill=BOTH, padx=10, pady=10)
+        # Convert to DataFrame
+        df = pd.DataFrame(trans_list)
+        
+        # Check the columns in the DataFrame
+        print("DataFrame columns:", df.columns)
+        
+        # Ensure the timestamp column exists
+        if 'timestamp' not in df.columns:
+            raise ValueError("DataFrame must contain a 'timestamp' column")
+        
+        # Print the first few entries to inspect the format
+        print("Sample timestamps:", df['timestamp'].head())
 
-        # Graphing options frame
-        graph_options_frame = Frame(graph_frame)
-        graph_options_frame.pack(fill=X, pady=5)
+        # Convert timestamp column to datetime with a specified format
+        try:
+            df['timestamp'] = pd.to_datetime(df['timestamp'], format='%Y-%m-%d', errors='coerce')
+        except Exception as e:
+            print("Error parsing dates:", e)
 
-        # Graph type selection
-        graph_type_var = StringVar(value="Bar Chart")
-        graph_type_label = Label(graph_options_frame, text="Graph Type:")
-        graph_type_label.pack(side=LEFT, padx=5)
+        # Check for NaT values after conversion
+        if df['timestamp'].isnull().any():
+            print("Some dates could not be parsed:", df[df['timestamp'].isnull()])
 
-        graph_type_dropdown = ttk.Combobox(
-            graph_options_frame, 
-            textvariable=graph_type_var, 
-            values=["Bar Chart"],
-            state="readonly",
-            width=15
-        )
-        graph_type_dropdown.pack(side=LEFT, padx=5)
+        # Extract month from timestamp
+        df['month'] = df['timestamp'].dt.to_period('M')
 
-        # Graph by selection
-        graph_by_var = StringVar(value="Price by Date")
-        graph_by_label = Label(graph_options_frame, text="Graph By:")
-        graph_by_label.pack(side=LEFT, padx=5)
+        #extract day from timestamp 
+        df['day'] = df['timestamp'].dt.to_period('D')
 
-        graph_by_dropdown = ttk.Combobox(
-            graph_options_frame, 
-            textvariable=graph_by_var, 
-            values=["Price by Date", "Furniture Types"],
-            state="readonly",
-            width=15
-        )
-        graph_by_dropdown.pack(side=LEFT, padx=5)
+        # Convert the price column to numeric
+        df['price'] = df['price'].replace("Rp. ", "", regex=True).replace(",", "", regex=True).astype(float)
 
-        # Matplotlib figure and canvas
-        fig, ax = plt.subplots(figsize=(10, 5), dpi=111)
-        canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+        # Group by month and calculate average transaction
+        monthly_avg = df.groupby('month')['price'].mean().reset_index()
+
+        # Create Matplotlib figure
+        fig, ax = plt.subplots(figsize=(10, 4))
+
+        # Plot line chart
+        ax.plot(monthly_avg['month'].astype(str), monthly_avg['price'], marker='o')
+        ax.set_xlabel('Month')
+        ax.set_ylabel('Average Transaction (Rp)')
+        ax.set_title('Monthly Average Transaction Amount')
+        plt.xticks(rotation=0)
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.tight_layout()
+
+        # Clear previous chart
+        for widget in chart_frame.winfo_children():
+            widget.destroy()
+
+        # Embed plot in Tkinter
+        canvas = FigureCanvasTkAgg(fig, master=chart_frame)
         canvas_widget = canvas.get_tk_widget()
         canvas_widget.pack(expand=True, fill=BOTH)
 
-        def generate_graph():
-            # Clear previous plot
-            ax.clear()
-
-            # Prepare data
-            graph_type = graph_type_var.get()
-            graph_by = graph_by_var.get()
-
-            # Convert transactions
-            for trans in transactions:
-                trans['price_numeric'] = float(trans['price'].replace("Rp. ", "").replace(",", ""))
-                trans['date'] = datetime.strptime(trans['timestamp'], '%Y-%m-%d')
-
-            if graph_by == "Price by Date":
-                # Group by date
-                date_prices = {}
-                for trans in transactions:
-                    date = trans['date'].date()
-                    if date not in date_prices:
-                        date_prices[date] = 0
-                    date_prices[date] += trans['price_numeric']
-                
-                dates = list(date_prices.keys())
-                prices = list(date_prices.values())
-
-                if graph_type == "Bar Chart":
-                    ax.bar(dates, prices, color='blue', edgecolor='navy')
-                    ax.set_title('Total Sales')
-                    ax.set_xlabel('Date')
-                    ax.set_ylabel('Total Price')
-                    plt.setp(ax.get_xticklabels(), rotation=0, ha='right')
-                
-            elif graph_by == "Furniture Types":
-                # Group by furniture type
-                furniture_sales = {}
-                for trans in transactions:
-                    furniture = trans['furniture']
-                    if furniture not in furniture_sales:
-                        furniture_sales[furniture] = 0
-                    furniture_sales[furniture] += trans['price_numeric']
-                
-                furniture_types = list(furniture_sales.keys())
-                sales = list(furniture_sales.values())
-
-                if graph_type == "Bar Chart":
-                    ax.bar(furniture_types, sales, color='blue', edgecolor='darkblue')
-                    ax.set_title('Sales by Furniture Type')
-                    ax.set_xlabel('Furniture Type')
-                    ax.set_ylabel('Total Sales')
-                    plt.setp(ax.get_xticklabels(), rotation=0, ha='right')
-
-            plt.tight_layout()
-            canvas.draw()
-
-        # Add generate graph button
-        generate_button = Button(graph_options_frame, text="Generate Graph", command=generate_graph)
-        generate_button.pack(side=LEFT, padx=5)
-
-        # Initial graph generation
-        generate_graph()
-
-    # Initially display all transactions
+        canvas.draw()
+    # Initially display all transactions and chart
     reset_filter()
-
-    # Add graph to transactions window
-    add_transaction_graph()
-
+    
 def save_transaction_to_file(transaction):
     """Save a single transaction to data_transaksi.txt"""
     try:
@@ -1089,13 +1048,12 @@ def edit_transaction():
 # Usage: Attach the new edit_transaction function to the help menu.
     data_mastering_menu.add_command(label="Edit Transaction", command=edit_transaction)
 
-
 def delete_transaction():
     if not transactions:
         messagebox.showinfo("Delete Transaction", "No transactions to delete.")
         return
 
-    # Create a list of transaction options based on description (furniture name and other details)
+    # Create a list of transaction options based on description
     transaction_options = [f"{i+1}. {t['furniture']} - {t['size']} - {t['color']} - {t['price']}" for i, t in enumerate(transactions)]
     
     # Open a dialog window to select the transaction you want to delete
@@ -1103,10 +1061,11 @@ def delete_transaction():
     delete_window.title("Delete Transaction")
     delete_window.geometry("400x200")
 
-    Label(delete_window, text="Pilih transaksi yang ingin dihapus:").pack(pady=10)
+    Label(delete_window, text="Choose the transaction you want to delete:").pack(pady=10)
     
     selected_transaction_var = StringVar()
-    selected_transaction_var.set(transaction_options[0])  # Back to the first transaction
+    selected_transaction_var.set(transaction_options[0])  # Default ke transaksi pertama
+
     # Dropdown menu to select the transaction
     transaction_menu = OptionMenu(delete_window, selected_transaction_var, *transaction_options)
     transaction_menu.pack(pady=10)
@@ -1118,14 +1077,13 @@ def delete_transaction():
 
         confirm = messagebox.askyesno(
             "Delete Confirmation", 
-            f"Apakah Anda yakin ingin menghapus transaksi ini?\n{selected_transaction['furniture']} - {selected_transaction['size']} - {selected_transaction['color']} - {selected_transaction['price']}"
+            f"Are you sure you want to delete the transaction ini?\n{selected_transaction['furniture']} - {selected_transaction['size']} - {selected_transaction['color']} - {selected_transaction['price']}"
         )
 
         if confirm:
             transactions.pop(selected_index)  # Delete the selected transaction
             messagebox.showinfo("Delete Successful", "Transaksi berhasil dihapus.")
             delete_window.destroy()  # Close the dialog after the transaction is deleted
-
     Button(delete_window, text="Delete Transaction", command=confirm_delete).pack(pady=20)
 
 # Function to open the Image Editor
@@ -1138,10 +1096,10 @@ def open_image_editor():
         return editor_root
 
     def create_frames(editor_root):
-        left_frame = Frame(editor_root, width=500, height=700, bg='white')
+        left_frame = Frame(editor_root, width=200, height=400, bg='white')
         left_frame.grid(row=0, column=0, padx=10, pady=5)
 
-        right_frame = Frame(editor_root, width=650, height=500, bg='white')
+        right_frame = Frame(editor_root, width=650, height=400, bg='white')
         right_frame.grid(row=0, column=1, padx=10, pady=5)
 
         return left_frame, right_frame
@@ -1153,7 +1111,7 @@ def open_image_editor():
         return original_image_label
 
     def create_toolbar(left_frame, editor_state):
-        tool_bar = Frame(left_frame, width=380, height=385)
+        tool_bar = Frame(left_frame, width=180, height=185)
         tool_bar.grid(row=2, column=0, padx=5, pady=5)
 
         Button(tool_bar, text="Select Image", command=lambda: load_image(editor_state)).grid(row=1, column=0, padx=5, pady=10)
@@ -1170,7 +1128,7 @@ def open_image_editor():
         label.image = img_tk  # Keep a reference to avoid garbage collection
 
     def load_image(editor_state):
-    # Add variable to track sequence number
+        # Add variable to track sequence number
         if 'image_counter' not in editor_state:
             editor_state['image_counter'] = 1
 
@@ -1186,7 +1144,7 @@ def open_image_editor():
             shutil.copy2(file_path, save_path)
             display_image(editor_state['image'], editor_state['original_image_label'])
         
-        # Increase the next file's counter
+        # Raise the counter for the next file
             editor_state['image_counter'] += 1
 
     def save_addtional_photo(editor_state):
@@ -1228,6 +1186,7 @@ def open_image_editor():
         'original_image_label': original_image_label,
         'edited_image_label': edited_image_label
     }
+
     # Create toolbar
     create_toolbar(left_frame, editor_state)
 
