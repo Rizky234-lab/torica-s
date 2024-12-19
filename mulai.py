@@ -423,7 +423,6 @@ def open_transactions():
                     ax.set_ylabel('Total Price')
                     plt.setp(ax.get_xticklabels(), rotation=0, ha='right')
                 
-
             elif graph_by == "Furniture Types":
                 # Group by furniture type
                 furniture_sales = {}
